@@ -54,4 +54,6 @@ const (
 	ReplyButton             = "replyButton"
 	InlineButton            = "inlineButton"
 	ProxyURL                = "https://t.me/socks?server=%s&port=%s&user=%s&pass=%s"
+	IPLEAKURL               = "https://ipleak.net/json/"
+	NodeBaseUrl             = "http://%s:30002/user"
 )

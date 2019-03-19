@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/fatih/color"
 	"github.com/jasonlvhit/gocron"
 	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo/ldb"
@@ -29,15 +28,13 @@ const (
 
 func GetGeoLocation(ipAddr string) (models.GeoLocation, error) {
 	var gl models.GeoLocation
-	resp, err := http.Get("https://ipleak.net/json/" + ipAddr)
+	resp, err := http.Get(constants.IPLEAKURL + ipAddr)
 	if err != nil {
-		log.Println("Error occurred while fetching GeoLocation: ", err.Error())
 		return gl, err
 	}
 
 	defer resp.Body.Close()
 	if err := json.NewDecoder(resp.Body).Decode(&gl); err != nil {
-		log.Println("Error occurred Decoding Response Body: ", err.Error())
 		return gl, err
 	}
 
@@ -66,51 +63,41 @@ func AddUser(ipAddr, userName string, db ldb.BotDB, passwordForNetwork string) e
 
 	err := DeleteUser(userName, ipAddr)
 	if err != nil {
-		log.Println("error while deleting user: ", err)
-		return err
-	}
-	uri := "http://" + ipAddr + ":30002/user"
-	password := StrongPassword(6)
-	err = db.Insert(passwordForNetwork, userName, password)
-	if err != nil {
-		log.Println("error while storing password: ", err)
 		return err
 	}
 
-	req := models.AddUser{
-		Username: userName,
-		Password: password,
+	password := StrongPassword(6)
+	uri := fmt.Sprintf(constants.NodeBaseUrl, ipAddr)
+	err = db.Insert(passwordForNetwork, userName, password)
+	if err != nil {
+		return err
 	}
+
+	req := models.AddUser{Username: userName, Password: password}
 	b, e := json.Marshal(req)
 	if e != nil {
-		log.Println("error in marshal: ", e)
 		return e
 	}
 	resp, err := http.Post(uri, "application/json", bytes.NewBuffer(b))
 	if err != nil {
-		log.Println("error in post request: ", uri)
 		return err
 	}
 	var res models.UserResp
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		log.Println("error on decoding resp: ", err)
 		return err
 	}
-	log.Printf("success response: %s", b)
+
 	return err
 }
 
 func DeleteUser(username, ipAddr string) error {
 	client := &http.Client{}
 
-	uri := fmt.Sprintf("http://%s:30002/user", ipAddr)
-	body := models.RemoveUser{
-		Username: username,
-	}
+	uri := fmt.Sprintf(constants.NodeBaseUrl, ipAddr)
+	body := models.RemoveUser{Username: username}
 
 	b, e := json.Marshal(body)
 	if e != nil {
-		log.Println("error in marshal: ", e)
 		return e
 	}
 	// Create request
@@ -134,8 +121,6 @@ func DeleteUser(username, ipAddr string) error {
 		log.Println(err)
 		return err
 	}
-
-	color.White("what happened? %s", b)
 
 	return err
 }

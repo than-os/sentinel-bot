@@ -141,7 +141,7 @@ type InlineButtonOptions struct {
 }
 
 type ButtonHelper struct {
-	Type   string
-	Labels []string
+	Type               string
+	Labels             []string
 	InlineKeyboardOpts []InlineButtonOptions
 }

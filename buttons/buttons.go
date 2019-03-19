@@ -26,11 +26,10 @@ func InlineButtons(opts []models.InlineButtonOptions) [][]tgbotapi.InlineKeyboar
 		btns = append(btns, []tgbotapi.InlineKeyboardButton{
 			{
 				Text: opt.Label,
-				URL: &opt.URL,
+				URL:  &opt.URL,
 			},
 		})
 	}
-
 
 	return btns
 }
