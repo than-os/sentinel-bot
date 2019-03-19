@@ -99,17 +99,16 @@ func HandleEthBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mo
 		}
 	}
 
-	uri := "https://t.me/socks?server=" + n.IPAddr + "&port=" + strconv.Itoa(n.Port) + "&user=" + n.Username + "&pass=" + n.Password
-	c := tgbotapi.NewMessage(u.Message.Chat.ID, "you have already selected : Node "+fmt.Sprintf("%s", resp.Value))
+	uri := fmt.Sprintf(constants.ProxyURL, n.IPAddr, strconv.Itoa(n.Port), n.Username, n.Password)
 	buttonOptions := []models.InlineButtonOptions{
-		{
-			Label: "Sentinel Proxy Node", URL: uri,
-		},
+		{Label: "Sentinel Proxy Node", URL: uri},
 	}
-	c.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: buttons.InlineButtons(buttonOptions),
+	msg := "you have already selected : Node " + fmt.Sprintf("%s", resp.Value)
+	opts := models.ButtonHelper{
+		Type:               constants.InlineButton,
+		InlineKeyboardOpts: buttonOptions,
 	}
-	_, _ = b.Send(c)
+	services.Send(b, u, msg, opts)
 }
 
 func AskForEthWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {

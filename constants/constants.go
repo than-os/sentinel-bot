@@ -1,6 +1,8 @@
 package constants
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	EthNetwork              = "Rinkeby@Ethereum"
@@ -51,4 +53,5 @@ const (
 	EthRegex                = "^(0x){1}[0-9a-fA-F]{40}$"
 	ReplyButton             = "replyButton"
 	InlineButton            = "inlineButton"
+	ProxyURL                = "https://t.me/socks?server=%s&port=%s&user=%s&pass=%s"
 )
