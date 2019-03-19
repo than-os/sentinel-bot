@@ -9,7 +9,7 @@ import (
 	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo/ldb"
 	"github.com/than-os/sentinel-bot/dbo/models"
-	"github.com/than-os/sentinel-bot/services"
+	"github.com/than-os/sentinel-bot/services/ethereum"
 	"github.com/than-os/sentinel-bot/services/proxy"
 	"github.com/than-os/sentinel-bot/services/tendermint"
 	"github.com/than-os/sentinel-bot/templates"
@@ -25,8 +25,9 @@ func Greet(b *tgbotapi.BotAPI, u tgbotapi.Update) {
 	greet := fmt.Sprintf(templates.GreetingMsg, u.Message.From.UserName)
 
 	c := tgbotapi.NewMessage(u.Message.Chat.ID, greet)
+	opts := []string{constants.EthNetwork, constants.TenderMintNetwork}
 	c.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
-		Keyboard:        buttons.ReplyButtons(constants.EthNetwork, constants.TenderMintNetwork),
+		Keyboard:        buttons.ReplyButtons(opts),
 		OneTimeKeyboard: true,
 		ResizeKeyboard:  true,
 	}
@@ -88,11 +89,11 @@ func MainHandler(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mode
 	switch u.Message.Text {
 
 	case constants.EthNetwork:
-		go services.AskForEthWallet(b, u, db, nodes.EthNodes)
+		go ethereum.AskForEthWallet(b, u, db, nodes.EthNodes)
 	case constants.TenderMintNetwork:
-		go services.AskForTendermintWallet(b, u, db, nodes.TMNodes)
+		go ethereum.AskForTendermintWallet(b, u, db, nodes.TMNodes)
 	case isEthAddr(u):
-		go services.HandleWallet(b, u, db)
+		go ethereum.HandleWallet(b, u, db)
 	case tendermint.IsValidTMAccount(u):
 		go tendermint.HandleWallet(b, u, db)
 	case constants.TenD, constants.OneM, constants.ThreeM:
@@ -100,7 +101,7 @@ func MainHandler(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mode
 	case isNodeID(u):
 		go HandleNodeId(b, u, db, nodes)
 	case isTxn(u):
-		go services.HandleTxHash(b, u, db, nodes.EthNodes)
+		go ethereum.HandleTxHash(b, u, db, nodes.EthNodes)
 	case tendermint.IsTMTxnHash(u):
 		go tendermint.HandleTMTxnHash(b, u, db, nodes.TMNodes)
 	default:
@@ -131,9 +132,11 @@ func ShowMyNode(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 		_, _ = b.Send(c)
 		return
 	}
-	btnOpts := models.InlineButtonOptions{
-		Label: "Proxy Node",
-		URL:   kv.Value,
+	btnOpts := []models.InlineButtonOptions{
+		{
+			Label: "Proxy Node",
+			URL:   kv.Value,
+		},
 	}
 	c := tgbotapi.NewMessage(u.Message.Chat.ID, constants.ConnectMessage)
 	c.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
@@ -168,8 +171,9 @@ func Restart(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 	}
 	greet := fmt.Sprintf(templates.GreetingMsg, u.Message.From.UserName)
 	c := tgbotapi.NewMessage(u.Message.Chat.ID, greet)
+	opts := []string{constants.EthNetwork, constants.TenderMintNetwork}
 	c.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
-		Keyboard: buttons.ReplyButtons(constants.EthNetwork, constants.TenderMintNetwork),
+		Keyboard: buttons.ReplyButtons(opts),
 	}
 	_, _ = b.Send(c)
 }
@@ -208,7 +212,7 @@ func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mod
 	}
 
 	if network.Value == constants.EthNetwork {
-		services.HandleNodeID(b, u, db, nodes.EthNodes)
+		ethereum.HandleNodeID(b, u, db, nodes.EthNodes)
 
 	}
 
@@ -226,7 +230,7 @@ func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.
 	}
 
 	if network.Value == constants.EthNetwork {
-		services.HandleEthBW(b, u, db, nodes.EthNodes)
+		ethereum.HandleEthBW(b, u, db, nodes.EthNodes)
 	}
 
 }

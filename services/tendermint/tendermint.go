@@ -126,9 +126,11 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 
 			return
 		}
-		btnOpts := models.InlineButtonOptions{
-			Label: nodes[idx].Username,
-			URL: uri,
+		btnOpts := []models.InlineButtonOptions{
+			{
+				Label: nodes[idx].Username,
+				URL: uri,
+			},
 		}
 		c = tgbotapi.NewMessage(u.Message.Chat.ID, constants.Success)
 		c.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
@@ -314,9 +316,11 @@ func HandleBWTM(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mod
 	}
 	uri := "https://t.me/socks?server=" + n.IPAddr + "&port=" + strconv.Itoa(n.Port) + "&user=" + n.Username + "&pass=" + n.Password
 	c := tgbotapi.NewMessage(u.Message.Chat.ID, "you have already selected : Node "+fmt.Sprintf("%s", resp.Value))
-	btnOpts := models.InlineButtonOptions{
-		Label: "Sentinel Proxy Node",
-		URL: uri,
+	btnOpts := []models.InlineButtonOptions{
+		{
+			Label: "Sentinel Proxy Node",
+			URL: uri,
+		},
 	}
 	c.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: buttons.InlineButtons(btnOpts),

@@ -101,8 +101,10 @@ func HandleEthBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mo
 
 	uri := "https://t.me/socks?server=" + n.IPAddr + "&port=" + strconv.Itoa(n.Port) + "&user=" + n.Username + "&pass=" + n.Password
 	c := tgbotapi.NewMessage(u.Message.Chat.ID, "you have already selected : Node "+fmt.Sprintf("%s", resp.Value))
-	buttonOptions := models.InlineButtonOptions{
-		Label: "Sentinel Proxy Node", URL: uri,
+	buttonOptions := []models.InlineButtonOptions{
+		{
+			Label: "Sentinel Proxy Node", URL: uri,
+		},
 	}
 	c.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: buttons.InlineButtons(buttonOptions),
@@ -114,8 +116,9 @@ func AskForEthWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 
 	if len(nodes) == 0 {
 		c := tgbotapi.NewMessage(u.Message.Chat.ID, constants.NoEthNodes)
+		opts := []string{constants.TenderMintNetwork}
 		c.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
-			Keyboard:        buttons.ReplyButtons(constants.TenderMintNetwork),
+			Keyboard:        buttons.ReplyButtons(opts),
 			ResizeKeyboard:  true,
 			Selective:       true,
 			OneTimeKeyboard: true,
@@ -137,8 +140,9 @@ func AskForTendermintWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB,
 
 	if len(nodes) == 0 {
 		c := tgbotapi.NewMessage(u.Message.Chat.ID, constants.NoTMNodes)
+		opts := []string{constants.EthNetwork}
 		c.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
-			Keyboard: buttons.ReplyButtons(constants.EthNetwork),
+			Keyboard: buttons.ReplyButtons(opts),
 		}
 		_, _ = b.Send(c)
 		return
@@ -230,8 +234,10 @@ func HandleTxHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []m
 
 			return
 		}
-		buttonOptions := models.InlineButtonOptions{
-			Label: nodes[idx].Username, URL: uri,
+		buttonOptions := []models.InlineButtonOptions{
+			{
+				Label: nodes[idx].Username, URL: uri,
+			},
 		}
 		c = tgbotapi.NewMessage(u.Message.Chat.ID, constants.Success)
 		c.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
