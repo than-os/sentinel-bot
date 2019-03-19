@@ -19,4 +19,5 @@ Ethereum Wallet Attached: <b>%s</b>`
 	BWError         = "error while storing bandwidth price"
 	NodeList        = "%s.) Location: %s\n User: %s \n Node wallet: %s"
 	BWPeriods       = "you have opted for %s of unlimited bandwidth"
+	Error           = "could not read user info"
 )

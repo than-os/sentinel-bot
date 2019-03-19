@@ -3,7 +3,6 @@ package ethereum
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/than-os/sentinel-bot/buttons"
 	"github.com/than-os/sentinel-bot/services"
 	"math"
 	"net/http"
@@ -103,7 +102,7 @@ func HandleEthBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mo
 	buttonOptions := []models.InlineButtonOptions{
 		{Label: "Sentinel Proxy Node", URL: uri},
 	}
-	msg := "you have already selected : Node " + fmt.Sprintf("%s", resp.Value)
+	msg := "you have already selected : Node " + resp.Value
 	opts := models.ButtonHelper{
 		Type:               constants.InlineButton,
 		InlineKeyboardOpts: buttonOptions,
@@ -114,141 +113,110 @@ func HandleEthBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mo
 func AskForEthWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
 
 	if len(nodes) == 0 {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, constants.NoEthNodes)
-		opts := []string{constants.TenderMintNetwork}
-		c.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
-			Keyboard:        buttons.ReplyButtons(opts),
-			ResizeKeyboard:  true,
-			Selective:       true,
-			OneTimeKeyboard: true,
-		}
-		_, _ = b.Send(c)
+		btnOpts := []string{constants.TenderMintNetwork}
+		opts := models.ButtonHelper{Type: constants.ReplyButton, Labels: btnOpts}
+		services.Send(b, u, constants.NoEthNodes, opts)
 		return
 	}
 
 	err := db.Insert(constants.BlockchainNetwork, u.Message.From.UserName, constants.EthNetwork)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "internal bot error")
-		_, _ = b.Send(c)
+		services.Send(b, u, "internal bot error")
+		return
 	}
-	c := tgbotapi.NewMessage(u.Message.Chat.ID, templates.AskForEthWallet)
-	_, _ = b.Send(c)
+
+	services.Send(b, u, templates.AskForEthWallet)
 }
 
 func AskForTendermintWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
 
 	if len(nodes) == 0 {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, constants.NoTMNodes)
-		opts := []string{constants.EthNetwork}
-		c.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
-			Keyboard: buttons.ReplyButtons(opts),
-		}
-		_, _ = b.Send(c)
+		btnOpts := []string{constants.EthNetwork}
+		opts := models.ButtonHelper{ Type: constants.ReplyButton, Labels: btnOpts }
+		services.Send(b, u, constants.NoTMNodes, opts)
 		return
 	}
 
 	err := db.Insert(constants.BlockchainNetwork, u.Message.From.UserName, constants.TenderMintNetwork)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "internal bot error")
-		_, _ = b.Send(c)
+		services.Send(b, u, "internal bot error")
+		return
 	}
-	c := tgbotapi.NewMessage(u.Message.Chat.ID, templates.AskForTMWallet)
-	_, _ = b.Send(c)
+
+	services.Send(b, u, templates.AskForTMWallet)
 }
 
 func HandleTxHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
 	resp, err := db.Read(constants.Node, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "could not get user info")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
 	UserWallet, err := db.Read(constants.EthAddr, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "could not get user info")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
-	respToStr := fmt.Sprintf("%s", resp.Value)
-	strToInt, err := strconv.Atoi(respToStr)
+
+	strToInt, err := strconv.Atoi(resp.Value)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "ASCII to INT conversion error")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
 
-	idx := strToInt - 1
+	i := strToInt - 1
 	if FindTxByHash(u.Message.Text, UserWallet.Value, u, db) {
-		uri := "https://t.me/socks?server=" + nodes[idx].IPAddr + "&port=" + strconv.Itoa(nodes[idx].Port) + "&user=" + nodes[idx].Username + "&pass=" + nodes[idx].Password
-
-		err := db.Insert(constants.IPAddr, u.Message.From.UserName, nodes[idx].IPAddr)
+		uri := fmt.Sprintf(constants.ProxyURL, nodes[i].IPAddr, strconv.Itoa(nodes[i].Port), nodes[i].Username, nodes[i].Password)
+		err := db.Insert(constants.IPAddr, u.Message.From.UserName, nodes[i].IPAddr)
 		if err != nil {
-			c := tgbotapi.NewMessage(u.Message.Chat.ID, "error in adding user details")
-			_, _ = b.Send(c)
+			services.Send(b, u, templates.Error)
 			return
 		}
 		err = db.Insert(constants.AssignedNodeURI, u.Message.From.UserName, uri)
 
 		if err != nil {
-			c := tgbotapi.NewMessage(u.Message.Chat.ID, "error in adding user details")
-			_, _ = b.Send(c)
+			services.Send(b, u, templates.Error)
 			return
 		}
 		err = db.Insert(constants.IsAuth, u.Message.From.UserName, "true")
 		if err != nil {
-			tgbotapi.NewMessage(u.Message.Chat.ID, "error while adding user to auth group. please try again")
+			services.Send(b, u, templates.Error)
 			return
 		}
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "Thanks for submitting the TX-HASH. We're validating it")
-		_, _ = b.Send(c)
-		c = tgbotapi.NewMessage(u.Message.Chat.ID, "creating new user for "+u.Message.From.UserName+"...")
-		_, _ = b.Send(c)
+		services.Send(b, u, "Thanks for submitting the TX-HASH. We're validating it")
+		services.Send(b, u, "creating new user for "+u.Message.From.UserName+"...")
 
-		node := nodes[idx]
+		node := nodes[i]
 		err = proxy.AddUser(node.IPAddr, u.Message.From.UserName, db, constants.Password)
 		if err != nil {
-			c := tgbotapi.NewMessage(u.Message.Chat.ID, "Error while creating SOCKS5 user for "+u.Message.From.UserName)
-			_, _ = b.Send(c)
+			services.Send(b, u, "Error while creating SOCKS5 user for "+u.Message.From.UserName)
 			return
 		}
 		pass, err := db.Read(constants.Password, u.Message.From.UserName)
 		if err != nil {
-			c := tgbotapi.NewMessage(u.Message.Chat.ID, "error while getting user pass")
-			_, _ = b.Send(c)
-
+			services.Send(b, u, templates.Error)
 			return
 		}
-		uri = "https://t.me/socks?server=" + node.IPAddr + "&port=" + strconv.Itoa(node.Port) + "&user=" + u.Message.From.UserName + "&pass=" + fmt.Sprintf("%s", pass.Value)
-		err = db.Insert(constants.IPAddr, u.Message.From.UserName, nodes[idx].IPAddr)
+		uri = fmt.Sprintf(constants.ProxyURL, node.IPAddr, strconv.Itoa(node.Port), u.Message.From.UserName, pass.Value)
+		err = db.Insert(constants.IPAddr, u.Message.From.UserName, nodes[i].IPAddr)
 		if err != nil {
-			c := tgbotapi.NewMessage(u.Message.Chat.ID, "error in adding user details")
-			_, _ = b.Send(c)
-
+			services.Send(b, u, templates.Error)
 			return
 		}
 		err = db.Insert(constants.AssignedNodeURI, u.Message.From.UserName, uri)
 		if err != nil {
-			c := tgbotapi.NewMessage(u.Message.Chat.ID, "error while adding user details")
-			_, _ = b.Send(c)
-
+			services.Send(b, u, templates.Error)
 			return
 		}
-		buttonOptions := []models.InlineButtonOptions{
-			{
-				Label: nodes[idx].Username, URL: uri,
-			},
+		btnOpts := []models.InlineButtonOptions{
+			{ Label: nodes[i].Username, URL: uri },
 		}
-		c = tgbotapi.NewMessage(u.Message.Chat.ID, constants.Success)
-		c.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-			InlineKeyboard: buttons.InlineButtons(buttonOptions),
-		}
-		_, _ = b.Send(c)
-
+		opts := models.ButtonHelper{ Type: constants.InlineButton, InlineKeyboardOpts: btnOpts }
+		services.Send(b, u, constants.Success, opts)
 		return
 	}
-	c := tgbotapi.NewMessage(u.Message.Chat.ID, "invalid TXN Hash. Please try again")
-	_, _ = b.Send(c)
 
+	services.Send(b, u, "invalid transaction hash. Please try again")
 }
 
 func FindTxByHash(txHash, walletAddr string, u tgbotapi.Update, db ldb.BotDB) bool {
@@ -322,39 +290,31 @@ func HandleNodeID(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []m
 	NodeId := u.Message.Text
 	idx, _ := strconv.Atoi(NodeId)
 	if idx > len(nodes) {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "invalid node id")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
-	err := db.Insert(constants.Node, u.Message.From.UserName, NodeId)
-	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "could not store user info")
-		_, _ = b.Send(c)
-		return
+	values := []models.KV{
+		{ Key: constants.Node, Value: NodeId },
+		{ Key: constants.NodeWallet, Value: nodes[idx-1].WalletAddress },
 	}
-	err = db.Insert(constants.NodeWallet, u.Message.From.UserName, nodes[idx-1].WalletAddress)
+	err := db.MultiWriter(values, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "could not store node wallet address for payments")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
 
 	kv, err := db.Read(constants.NodePrice, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "could not get node's price for bandwidth")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
+
 	msg := fmt.Sprintf(templates.AskForPayment, kv.Value)
-	color.Red("crazy: %s\n%s", nodes, kv)
-	c := tgbotapi.NewMessage(u.Message.Chat.ID, msg)
-	_, _ = b.Send(c)
-	c = tgbotapi.NewMessage(u.Message.Chat.ID, nodes[idx-1].WalletAddress) //should be node wallet address
-	_, _ = b.Send(c)
+	services.Send(b, u, msg)
+	services.Send(b, u, nodes[idx-1].WalletAddress)
 }
 
 func subscriptionPeriod(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, t time.Duration, price, period string) {
-	//t := constants.TenDays
 	pairs := []models.KV{
 		{
 			Key: constants.Timestamp, Value: time.Now().Add(t).Format(time.RFC3339),
