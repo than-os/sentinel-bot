@@ -19,8 +19,10 @@ type BotDB interface {
 	Iterate() []models.User
 	// IterateExpired would return a slice of expired users
 	IterateExpired() ([]models.ExpiredUsers, error)
-	// MultiRead would return a slice you key value pairs just to avoid too redundant code
+	// MultiRead would return a slice of your key value
+	// pairs just to avoid too much redundant code
 	MultiReader([]string, string) ([]models.KV, error)
-	// MultiWriter would write multiple key value pairs into database just to avoid too redundant code
+	// MultiWriter would write multiple key value pairs
+	// into database to avoid multiple calls to Insert() inside a method
 	MultiWriter([]models.KV, string) error
 }
