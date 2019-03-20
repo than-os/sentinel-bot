@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/than-os/sentinel-bot/buttons"
 	"github.com/than-os/sentinel-bot/constants"
@@ -9,6 +10,7 @@ import (
 	"github.com/than-os/sentinel-bot/templates"
 	"gopkg.in/telegram-bot-api.v4"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -83,4 +85,44 @@ func GetTelegramUsername(username string) string {
 	}
 
 	return ""
+}
+
+func GetNodes() (models.Nodes, error) {
+	var body []models.TONNode
+	var N models.Nodes
+	resp, err := http.Get(constants.SentinelTONURL)
+	if err != nil {
+		return N, err
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		return N, err
+	}
+	defer resp.Body.Close()
+
+	for _, node := range body {
+		if node.Type == constants.NodeType {
+			N.TMNodes = append(N.TMNodes, node)
+		} else {
+			N.EthNodes = append(N.EthNodes, node)
+		}
+	}
+	return N, err
+}
+
+func SetState(b *tgbotapi.BotAPI, u tgbotapi.Update, state int8, db ldb.BotDB) {
+	err := db.SetState(u.Message.From.UserName, state)
+	if err != nil {
+		Send(b, u, "error while updating user state. Cannot proceed further")
+		return
+	}
+}
+
+func GetState(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) int8 {
+	state, err := db.GetState(u.Message.From.UserName)
+	if err != nil {
+		Send(b, u, "error while getting user state. Cannot proceed further")
+		return constants.NoState
+	}
+
+	return state
 }

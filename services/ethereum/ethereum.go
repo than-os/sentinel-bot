@@ -21,6 +21,7 @@ import (
 )
 
 func HandleWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
+	helpers.SetState(b, u, constants.EthState1, db)
 
 	ok := common.IsHexAddress(u.Message.Text)
 	if ok {
@@ -117,7 +118,7 @@ func HandleEthBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mo
 }
 
 func AskForEthWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
-
+	helpers.SetState(b, u, constants.EthState0, db)
 	if len(nodes) == 0 {
 		btnOpts := []string{constants.TenderMintNetwork}
 		opts := models.ButtonHelper{Type: constants.ReplyButton, Labels: btnOpts}
@@ -135,7 +136,7 @@ func AskForEthWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 }
 
 func AskForTendermintWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
-
+	helpers.SetState(b, u, constants.TMState0, db)
 	if len(nodes) == 0 {
 		btnOpts := []string{constants.EthNetwork}
 		opts := models.ButtonHelper{Type: constants.ReplyButton, Labels: btnOpts}
@@ -153,6 +154,7 @@ func AskForTendermintWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB,
 }
 
 func HandleTxHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
+	go helpers.SetState(b, u, constants.EthState4, db)
 	resp, err := db.Read(constants.Node, u.Message.From.UserName)
 	if err != nil {
 		helpers.Send(b, u, templates.Error)
@@ -193,7 +195,7 @@ func HandleTxHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []m
 		helpers.Send(b, u, "creating new user for "+u.Message.From.UserName+"...")
 
 		node := nodes[i]
-		err = proxy.AddUser(node.IPAddr, u.Message.From.UserName, db, constants.Password)
+		err = proxy.AddUser(node.IPAddr, u.Message.From.UserName, constants.Password, db)
 		if err != nil {
 			helpers.Send(b, u, "Error while creating SOCKS5 user for "+u.Message.From.UserName)
 			return

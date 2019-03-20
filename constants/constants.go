@@ -53,4 +53,23 @@ const (
 	PasswordLength      = 12
 	SentinelTONURL      = "https://ton.sentinelgroup.io/all"
 	NodeType            = "tendermint"
+	EthState            = "ETHSTATE"
+	TMState             = "TMSTATE"
+	NoState             = -1
+)
+
+const (
+	EthState0 = iota
+	EthState1
+	EthState2
+	EthState3
+	EthState4
+)
+
+const (
+	TMState0 = iota
+	TMState1
+	TMState2
+	TMState3
+	TMState4
 )

@@ -53,6 +53,7 @@ func getTMTxn(hash string) models.TMTxn {
 }
 
 func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
+	go helpers.SetState(b, u, constants.TMState4, db)
 	resp, err := db.Read(constants.NodeTM, u.Message.From.UserName)
 	if err != nil {
 		c := tgbotapi.NewMessage(u.Message.Chat.ID, "could not get user info")
@@ -86,7 +87,7 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 		helpers.Send(b, u, "creating new user for "+u.Message.From.UserName+"...")
 
 		node := nodes[i]
-		err = proxy.AddUser(node.IPAddr, u.Message.From.UserName, db, constants.PasswordTM)
+		err = proxy.AddUser(node.IPAddr, u.Message.From.UserName, constants.PasswordTM, db)
 		if err != nil {
 			helpers.Send(b, u, templates.Error)
 			return
@@ -170,7 +171,7 @@ func IsValidTMTxn(u tgbotapi.Update, db ldb.BotDB) bool {
 }
 
 func HandleWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
-
+	helpers.SetState(b, u, constants.TMState1, db)
 	if IsValidTMAccount(u) != "" {
 		err := db.Insert(constants.WalletTM, u.Message.From.UserName, u.Message.Text)
 		if err != nil {

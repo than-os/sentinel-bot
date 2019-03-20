@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -15,7 +14,6 @@ import (
 	"github.com/than-os/sentinel-bot/templates"
 	"gopkg.in/telegram-bot-api.v4"
 	"math"
-	"net/http"
 	"regexp"
 	"strconv"
 	"time"
@@ -29,28 +27,6 @@ func Greet(b *tgbotapi.BotAPI, u tgbotapi.Update) {
 		Type: constants.ReplyButton, Labels: btnOpts,
 	}
 	helpers.Send(b, u, greet, opts)
-}
-
-func GetNodes() (models.Nodes, error) {
-	var N models.Nodes
-	var body []models.TONNode
-	resp, err := http.Get(constants.SentinelTONURL)
-	if err != nil {
-		return N, err
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		return N, err
-	}
-	defer resp.Body.Close()
-
-	for _, node := range body {
-		if node.Type == constants.NodeType {
-			N.TMNodes = append(N.TMNodes, node)
-		} else {
-			N.EthNodes = append(N.EthNodes, node)
-		}
-	}
-	return N, err
 }
 
 func isEthAddr(u tgbotapi.Update) string {
@@ -189,10 +165,12 @@ func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mod
 		return
 	}
 	if network.Value == constants.TenderMintNetwork {
+		go helpers.SetState(b, u, constants.TMState3, db)
 		tendermint.HandleTMNodeID(b, u, db, nodes.TMNodes)
 	}
 
 	if network.Value == constants.EthNetwork {
+		go helpers.SetState(b, u, constants.EthState3, db)
 		ethereum.HandleNodeID(b, u, db, nodes.EthNodes)
 
 	}
@@ -206,10 +184,13 @@ func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.
 	}
 
 	if network.Value == constants.TenderMintNetwork {
+		go helpers.SetState(b, u, constants.TMState2, db)
+
 		tendermint.HandleBWTM(b, u, db, nodes.TMNodes)
 	}
 
 	if network.Value == constants.EthNetwork {
+		go helpers.SetState(b, u, constants.TMState2, db)
 		ethereum.HandleEthBW(b, u, db, nodes.EthNodes)
 	}
 
