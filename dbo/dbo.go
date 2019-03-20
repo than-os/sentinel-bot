@@ -30,13 +30,27 @@ func NewDB() (ldb.BotDB, *models.Nodes, error) {
 }
 
 // state type is int16 because our app is never going to exceed the limits of int8
-func (l Level) SetState(username string, state int8) error {
-	return l.Insert(constants.EthNetwork, username, strconv.Itoa(int(state)))
+func (l Level) SetEthState(username string, state int8) error {
+	return l.Insert(constants.EthState, username, strconv.Itoa(int(state)))
 }
 
 // state type is int16 because our app is never going to exceed the limits of int8
-func (l Level) GetState(username string) (int8, error) {
+func (l Level) GetEthState(username string) (int8, error) {
 	pair, err := l.Read(constants.EthState, username)
+	if err != nil {
+		return 0, err
+	}
+	i, e := strconv.ParseInt(pair.Value, 10, 8)
+
+	return int8(i), e
+}
+
+func (l Level) SetTMState(username string, state int8) error {
+	return l.Insert(constants.TMState, username, strconv.Itoa(int(state)))
+}
+
+func (l Level) GetTMState(username string) (int8, error) {
+	pair, err := l.Read(constants.TMState, username)
 	if err != nil {
 		return 0, err
 	}

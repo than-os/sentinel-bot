@@ -8,8 +8,10 @@ type BotDB interface {
 	// TMUserState returns the current state of the user in TM the bot db
 	TMUserState(string) []models.KV
 	// GetState and SetState are getter setter methods for user state in the app
-	GetState(string) (int8, error)
-	SetState(string, int8) error
+	GetEthState(string) (int8, error)
+	SetEthState(string, int8) error
+	GetTMState(string) (int8, error)
+	SetTMState(string, int8) error
 	// Insert is used to store a new key-value pair
 	Insert(string, string, string) error
 	// Update is used to update an existing key-value pair

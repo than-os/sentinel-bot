@@ -43,11 +43,7 @@ func main() {
 		}
 
 		handlers.MainHandler(bot, update, db, *nodes)
-		pair, err := db.GetState(update.Message.From.UserName)
-		if err != nil {
-			color.Red("******* ERROR = %s *******", err.Error())
-		}
-		color.Green("******* STATE = %d *******", pair)
+
 		if update.Message.IsCommand() {
 			switch update.Message.Command() {
 			case "mynode":
@@ -66,6 +62,11 @@ func main() {
 				return
 			}
 		}
+		pair, err := db.GetTMState(update.Message.From.UserName)
+		if err != nil {
+			color.Red("******* ERROR = %s *******", err.Error())
+		}
+		color.Green("******* STATE = %d *******", pair)
 
 	}
 

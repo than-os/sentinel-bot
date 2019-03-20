@@ -18,6 +18,24 @@ import (
 	"strings"
 )
 
+func AskForTendermintWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
+	if len(nodes) == 0 {
+		btnOpts := []string{constants.EthNetwork}
+		opts := models.ButtonHelper{Type: constants.ReplyButton, Labels: btnOpts}
+		helpers.Send(b, u, templates.NoTMNodes, opts)
+		return
+	}
+
+	err := db.Insert(constants.BlockchainNetwork, u.Message.From.UserName, constants.TenderMintNetwork)
+	if err != nil {
+		helpers.Send(b, u, "internal bot error")
+		return
+	}
+
+	helpers.Send(b, u, templates.AskForTMWallet)
+	helpers.SetState(b, u, constants.TMState, constants.TMState0, db)
+}
+
 func IsValidTMAccount(u tgbotapi.Update) string {
 	ok := strings.HasPrefix(u.Message.Text, constants.TMPrefix)
 	l := len(u.Message.Text)
@@ -53,7 +71,14 @@ func getTMTxn(hash string) models.TMTxn {
 }
 
 func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
-	go helpers.SetState(b, u, constants.TMState4, db)
+	state := helpers.GetState(b, u, constants.TMState, db)
+	color.Green("******* STATE BW = %d *******", state)
+
+	if state <= constants.TMState2 {
+		helpers.Send(b,u, templates.FollowSequence)
+		return
+	}
+
 	resp, err := db.Read(constants.NodeTM, u.Message.From.UserName)
 	if err != nil {
 		c := tgbotapi.NewMessage(u.Message.Chat.ID, "could not get user info")
@@ -124,6 +149,7 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 			InlineKeyboardOpts: btnOpts,
 		}
 		helpers.Send(b, u, templates.Success, opts)
+		go helpers.SetState(b, u, constants.TMState, constants.TMState4, db)
 		return
 	}
 
@@ -171,7 +197,13 @@ func IsValidTMTxn(u tgbotapi.Update, db ldb.BotDB) bool {
 }
 
 func HandleWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
-	helpers.SetState(b, u, constants.TMState1, db)
+	TMState := helpers.GetState(b, u, constants.TMState, db)
+	color.Green("******* STATE HANDLE WALLET = %d *******", TMState)
+	if TMState == constants.TMState0 {
+		helpers.Send(b,u, templates.FollowSequence)
+		return
+	}
+	helpers.SetState(b, u, constants.TMState, constants.TMState1, db)
 	if IsValidTMAccount(u) != "" {
 		err := db.Insert(constants.WalletTM, u.Message.From.UserName, u.Message.Text)
 		if err != nil {

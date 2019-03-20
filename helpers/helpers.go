@@ -109,18 +109,36 @@ func GetNodes() (models.Nodes, error) {
 	return N, err
 }
 
-func SetState(b *tgbotapi.BotAPI, u tgbotapi.Update, state int8, db ldb.BotDB) {
-	err := db.SetState(u.Message.From.UserName, state)
+func SetState(b *tgbotapi.BotAPI, u tgbotapi.Update, network string , state int8, db ldb.BotDB) {
+	if network == constants.TMState {
+		err := db.SetTMState(u.Message.From.UserName, state)
+		if err != nil {
+			Send(b, u, "invalid tendermint user set state")
+			return
+		}
+		return
+	}
+	err := db.SetEthState(u.Message.From.UserName, state)
 	if err != nil {
-		Send(b, u, "error while updating user state. Cannot proceed further")
+		Send(b, u, "invalid ethereum user set state")
 		return
 	}
 }
 
-func GetState(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) int8 {
-	state, err := db.GetState(u.Message.From.UserName)
+func GetState(b *tgbotapi.BotAPI, u tgbotapi.Update, network string, db ldb.BotDB) int8 {
+	if network == constants.TMState {
+		state, err := db.GetTMState(u.Message.From.UserName)
+		if err != nil {
+			Send(b, u, "invalid tendermint user get state")
+			return constants.NoState
+		}
+
+		return state
+	}
+
+	state, err := db.GetEthState(u.Message.From.UserName)
 	if err != nil {
-		Send(b, u, "error while getting user state. Cannot proceed further")
+		Send(b, u, "invalid ethereum user get state")
 		return constants.NoState
 	}
 

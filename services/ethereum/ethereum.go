@@ -21,7 +21,7 @@ import (
 )
 
 func HandleWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
-	helpers.SetState(b, u, constants.EthState1, db)
+	helpers.SetState(b, u, constants.EthState, constants.EthState1, db)
 
 	ok := common.IsHexAddress(u.Message.Text)
 	if ok {
@@ -118,7 +118,7 @@ func HandleEthBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mo
 }
 
 func AskForEthWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
-	helpers.SetState(b, u, constants.EthState0, db)
+	helpers.SetState(b, u, constants.EthState, constants.EthState0, db)
 	if len(nodes) == 0 {
 		btnOpts := []string{constants.TenderMintNetwork}
 		opts := models.ButtonHelper{Type: constants.ReplyButton, Labels: btnOpts}
@@ -135,26 +135,8 @@ func AskForEthWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 	helpers.Send(b, u, templates.AskForEthWallet)
 }
 
-func AskForTendermintWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
-	helpers.SetState(b, u, constants.TMState0, db)
-	if len(nodes) == 0 {
-		btnOpts := []string{constants.EthNetwork}
-		opts := models.ButtonHelper{Type: constants.ReplyButton, Labels: btnOpts}
-		helpers.Send(b, u, templates.NoTMNodes, opts)
-		return
-	}
-
-	err := db.Insert(constants.BlockchainNetwork, u.Message.From.UserName, constants.TenderMintNetwork)
-	if err != nil {
-		helpers.Send(b, u, "internal bot error")
-		return
-	}
-
-	helpers.Send(b, u, templates.AskForTMWallet)
-}
-
 func HandleTxHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
-	go helpers.SetState(b, u, constants.EthState4, db)
+	helpers.SetState(b, u, constants.EthState, constants.EthState4, db)
 	resp, err := db.Read(constants.Node, u.Message.From.UserName)
 	if err != nil {
 		helpers.Send(b, u, templates.Error)
