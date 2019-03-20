@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/than-os/sentinel-bot/buttons"
 	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo/ldb"
 	"github.com/than-os/sentinel-bot/dbo/models"
+	"github.com/than-os/sentinel-bot/services"
 	"github.com/than-os/sentinel-bot/services/ethereum"
 	"github.com/than-os/sentinel-bot/services/proxy"
 	"github.com/than-os/sentinel-bot/services/tendermint"
@@ -24,20 +24,17 @@ import (
 func Greet(b *tgbotapi.BotAPI, u tgbotapi.Update) {
 	greet := fmt.Sprintf(templates.GreetingMsg, u.Message.From.UserName)
 
-	c := tgbotapi.NewMessage(u.Message.Chat.ID, greet)
-	opts := []string{constants.EthNetwork, constants.TenderMintNetwork}
-	c.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
-		Keyboard:        buttons.ReplyButtons(opts),
-		OneTimeKeyboard: true,
-		ResizeKeyboard:  true,
+	btnOpts := []string{constants.EthNetwork, constants.TenderMintNetwork}
+	opts := models.ButtonHelper{
+		Type: constants.ReplyButton, Labels: btnOpts,
 	}
-	_, _ = b.Send(c)
+	services.Send(b, u, greet, opts)
 }
 
 func GetNodes() (models.Nodes, error) {
 	var N models.Nodes
 	var body []models.TONNode
-	resp, err := http.Get("https://ton.sentinelgroup.io/all")
+	resp, err := http.Get(constants.SentinelTONURL)
 	if err != nil {
 		return N, err
 	}
@@ -47,7 +44,7 @@ func GetNodes() (models.Nodes, error) {
 	defer resp.Body.Close()
 
 	for _, node := range body {
-		if node.Type == "tendermint" {
+		if node.Type == constants.NodeType {
 			N.TMNodes = append(N.TMNodes, node)
 		} else {
 			N.EthNodes = append(N.EthNodes, node)
@@ -106,8 +103,7 @@ func MainHandler(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mode
 		go tendermint.HandleTMTxnHash(b, u, db, nodes.TMNodes)
 	default:
 		if !u.Message.IsCommand() {
-			c := tgbotapi.NewMessage(u.Message.Chat.ID, "invalid option")
-			_, _ = b.Send(c)
+			services.Send(b, u, templates.InvalidOption)
 		}
 	}
 }
@@ -115,97 +111,82 @@ func MainHandler(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mode
 func ShowEthWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 	kv, err := db.Read(constants.EthAddr, u.Message.From.UserName)
 	if err != nil {
-
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "error while finding user wallet")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
 
-	c := tgbotapi.NewMessage(u.Message.Chat.ID, kv.Value)
-	_, _ = b.Send(c)
+	services.Send(b, u, kv.Value)
 }
 
 func ShowMyNode(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 	kv, err := db.Read(constants.AssignedNodeURI, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "error while finding node url")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
 	btnOpts := []models.InlineButtonOptions{
-		{
-			Label: "Proxy Node",
-			URL:   kv.Value,
-		},
+		{Label: "Proxy Node", URL: kv.Value},
 	}
-	c := tgbotapi.NewMessage(u.Message.Chat.ID, constants.ConnectMessage)
-	c.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
-		InlineKeyboard: buttons.InlineButtons(btnOpts),
+	opts := models.ButtonHelper{
+		Type: constants.InlineButton, InlineKeyboardOpts: btnOpts,
 	}
-	_, _ = b.Send(c)
+	services.Send(b, u, templates.ConnectMessage, opts)
+
 }
 
 func Restart(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 	kv, err := db.Read(constants.IPAddr, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "not found")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
 	err = proxy.DeleteUser(u.Message.From.UserName, kv.Value)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "user not deleted")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
+		return
 	}
 	err = db.RemoveETHUser(u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "not found")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
 	err = db.RemoveTMUser(u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "not found")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
 	greet := fmt.Sprintf(templates.GreetingMsg, u.Message.From.UserName)
-	c := tgbotapi.NewMessage(u.Message.Chat.ID, greet)
-	opts := []string{constants.EthNetwork, constants.TenderMintNetwork}
-	c.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
-		Keyboard: buttons.ReplyButtons(opts),
+	btnOpts := []string{constants.EthNetwork, constants.TenderMintNetwork}
+	opts := models.ButtonHelper{
+		Type:   constants.ReplyButton,
+		Labels: btnOpts,
 	}
-	_, _ = b.Send(c)
+	services.Send(b, u, greet, opts)
 }
 
 func ShowMyInfo(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 	bw, err := db.Read(constants.Timestamp, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "not found")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
 	wallet, err := db.Read(constants.EthAddr, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "not found")
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.Error)
 		return
 	}
 
 	d, _ := time.Parse(time.RFC3339, bw.Value)
 	days := math.Ceil(d.Sub(time.Now()).Hours()) / 24
-
 	msg := fmt.Sprintf(templates.UserInfo, days, wallet.Value)
-	c := tgbotapi.NewMessage(u.Message.Chat.ID, msg)
-	c.ParseMode = "HTML"
-	_, _ = b.Send(c)
+	services.Send(b, u, msg)
 }
 
 func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.Nodes) {
 	network, err := db.Read(constants.BlockchainNetwork, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, constants.BWAttachmentError)
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.BWAttachmentError)
+		return
 	}
 	if network.Value == constants.TenderMintNetwork {
 		tendermint.HandleTMNodeID(b, u, db, nodes.TMNodes)
@@ -221,8 +202,7 @@ func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mod
 func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.Nodes) {
 	network, err := db.Read(constants.BlockchainNetwork, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, constants.BWAttachmentError)
-		_, _ = b.Send(c)
+		services.Send(b, u, templates.BWAttachmentError)
 	}
 
 	if network.Value == constants.TenderMintNetwork {

@@ -61,11 +61,17 @@ func HandleEthBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mo
 		}
 		switch u.Message.Text {
 		case constants.TenD:
-			subscriptionPeriod(b, u, db, constants.TenDays, constants.NodeBasePrice, constants.TenD)
+			services.SubscriptionPeriod(b, u, db,
+				constants.TenDays, constants.EthNetwork, constants.NodeBasePrice, constants.TenD,
+			)
 		case constants.OneM:
-			subscriptionPeriod(b, u, db, constants.Month, constants.NodeMonthPrice, constants.OneM)
+			services.SubscriptionPeriod(b, u, db,
+				constants.Month, constants.EthNetwork, constants.NodeMonthPrice, constants.OneM,
+			)
 		case constants.ThreeM:
-			subscriptionPeriod(b, u, db, constants.ThreeMonths, constants.NodeThreeMonthPrice, constants.ThreeM)
+			services.SubscriptionPeriod(b, u, db,
+				constants.ThreeMonths, constants.EthNetwork, constants.NodeThreeMonthPrice, constants.ThreeM,
+			)
 		}
 
 		services.Send(b, u, templates.AskToSelectANode)
@@ -115,7 +121,7 @@ func AskForEthWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 	if len(nodes) == 0 {
 		btnOpts := []string{constants.TenderMintNetwork}
 		opts := models.ButtonHelper{Type: constants.ReplyButton, Labels: btnOpts}
-		services.Send(b, u, constants.NoEthNodes, opts)
+		services.Send(b, u, templates.NoEthNodes, opts)
 		return
 	}
 
@@ -132,8 +138,8 @@ func AskForTendermintWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB,
 
 	if len(nodes) == 0 {
 		btnOpts := []string{constants.EthNetwork}
-		opts := models.ButtonHelper{ Type: constants.ReplyButton, Labels: btnOpts }
-		services.Send(b, u, constants.NoTMNodes, opts)
+		opts := models.ButtonHelper{Type: constants.ReplyButton, Labels: btnOpts}
+		services.Send(b, u, templates.NoTMNodes, opts)
 		return
 	}
 
@@ -209,10 +215,10 @@ func HandleTxHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []m
 			return
 		}
 		btnOpts := []models.InlineButtonOptions{
-			{ Label: nodes[i].Username, URL: uri },
+			{Label: nodes[i].Username, URL: uri},
 		}
-		opts := models.ButtonHelper{ Type: constants.InlineButton, InlineKeyboardOpts: btnOpts }
-		services.Send(b, u, constants.Success, opts)
+		opts := models.ButtonHelper{Type: constants.InlineButton, InlineKeyboardOpts: btnOpts}
+		services.Send(b, u, templates.Success, opts)
 		return
 	}
 
@@ -294,8 +300,8 @@ func HandleNodeID(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []m
 		return
 	}
 	values := []models.KV{
-		{ Key: constants.Node, Value: NodeId },
-		{ Key: constants.NodeWallet, Value: nodes[idx-1].WalletAddress },
+		{Key: constants.Node, Value: NodeId},
+		{Key: constants.NodeWallet, Value: nodes[idx-1].WalletAddress},
 	}
 	err := db.MultiWriter(values, u.Message.From.UserName)
 	if err != nil {
@@ -312,22 +318,4 @@ func HandleNodeID(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []m
 	msg := fmt.Sprintf(templates.AskForPayment, kv.Value)
 	services.Send(b, u, msg)
 	services.Send(b, u, nodes[idx-1].WalletAddress)
-}
-
-func subscriptionPeriod(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, t time.Duration, price, period string) {
-	pairs := []models.KV{
-		{
-			Key: constants.Timestamp, Value: time.Now().Add(t).Format(time.RFC3339),
-		},
-		{
-			Key: constants.NodePrice, Value: price,
-		},
-	}
-	err := db.MultiWriter(pairs, u.Message.From.UserName)
-	if err != nil {
-		services.Send(b, u, templates.BWError)
-		return
-	}
-	msg := fmt.Sprintf(templates.BWPeriods, period)
-	services.Send(b, u, msg)
 }
