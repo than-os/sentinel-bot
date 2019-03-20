@@ -52,4 +52,5 @@ const (
 	NodeBaseUrl         = "http://%s:30002/user"
 	PasswordLength      = 12
 	SentinelTONURL      = "https://ton.sentinelgroup.io/all"
+	NodeType            = "tendermint"
 )

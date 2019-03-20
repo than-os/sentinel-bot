@@ -26,8 +26,7 @@ func Greet(b *tgbotapi.BotAPI, u tgbotapi.Update) {
 
 	btnOpts := []string{constants.EthNetwork, constants.TenderMintNetwork}
 	opts := models.ButtonHelper{
-		Type:   constants.ReplyButton,
-		Labels: btnOpts,
+		Type: constants.ReplyButton, Labels: btnOpts,
 	}
 	services.Send(b, u, greet, opts)
 }
@@ -45,7 +44,7 @@ func GetNodes() (models.Nodes, error) {
 	defer resp.Body.Close()
 
 	for _, node := range body {
-		if node.Type == "tendermint" {
+		if node.Type == constants.NodeType {
 			N.TMNodes = append(N.TMNodes, node)
 		} else {
 			N.EthNodes = append(N.EthNodes, node)
@@ -126,9 +125,7 @@ func ShowMyNode(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 		return
 	}
 	btnOpts := []models.InlineButtonOptions{
-		{
-			Label: "Proxy Node", URL: kv.Value,
-		},
+		{Label: "Proxy Node", URL: kv.Value},
 	}
 	opts := models.ButtonHelper{
 		Type: constants.InlineButton, InlineKeyboardOpts: btnOpts,
