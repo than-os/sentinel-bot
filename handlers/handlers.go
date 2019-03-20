@@ -138,7 +138,7 @@ func ShowMyNode(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 			URL:   kv.Value,
 		},
 	}
-	c := tgbotapi.NewMessage(u.Message.Chat.ID, constants.ConnectMessage)
+	c := tgbotapi.NewMessage(u.Message.Chat.ID, templates.ConnectMessage)
 	c.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 		InlineKeyboard: buttons.InlineButtons(btnOpts),
 	}
@@ -204,7 +204,7 @@ func ShowMyInfo(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.Nodes) {
 	network, err := db.Read(constants.BlockchainNetwork, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, constants.BWAttachmentError)
+		c := tgbotapi.NewMessage(u.Message.Chat.ID, templates.BWAttachmentError)
 		_, _ = b.Send(c)
 	}
 	if network.Value == constants.TenderMintNetwork {
@@ -221,7 +221,7 @@ func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mod
 func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.Nodes) {
 	network, err := db.Read(constants.BlockchainNetwork, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, constants.BWAttachmentError)
+		c := tgbotapi.NewMessage(u.Message.Chat.ID, templates.BWAttachmentError)
 		_, _ = b.Send(c)
 	}
 

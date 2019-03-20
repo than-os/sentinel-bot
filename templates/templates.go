@@ -12,12 +12,16 @@ Please select a blockchain network for payments to this bot.`
 1 for Node 1, 2 for Node 2 and so on...`
 	UserInfo = `Bandwidth Duration Left: <b>%0.0f days</b>
 Ethereum Wallet Attached: <b>%s</b>`
-	AskForEthWallet = "Please share your ethereum wallet address that you want to use for transactions to this bot"
-	AskForPayment   = "please send %s $SENTS to the following address and submit the transaction hash here: "
-	AskForTMWallet  = "Please share your tendermint wallet address that you want to use for transactions to this bot"
-	AskForBW        = "Please select how much bandwidth you need by clicking on one of the buttons below: "
-	BWError         = "error while storing bandwidth price"
-	NodeList        = "%s.) Location: %s\n User: %s \n Node wallet: %s"
-	BWPeriods       = "you have opted for %s of unlimited bandwidth"
-	Error           = "could not read user info"
+	AskForEthWallet   = "Please share your ethereum wallet address that you want to use for transactions to this bot"
+	AskForPayment     = "please send %s $SENTS to the following address and submit the transaction hash here: "
+	AskForTMWallet    = "Please share your tendermint wallet address that you want to use for transactions to this bot"
+	AskForBW          = "Please select how much bandwidth you need by clicking on one of the buttons below: "
+	BWError           = "error while storing bandwidth price"
+	NodeList          = "%s.) Location: %s\n User: %s \n Node wallet: %s"
+	BWPeriods         = "you have opted for %s of unlimited bandwidth"
+	Error             = "could not read user info"
+	BWAttachmentError = "error occurred while adding user details for bandwidth requirements"
+	ConnectMessage    = "please click on the button below to connect to Sentinel's SOCKS5 Proxy"
+	NoEthNodes        = "no nodes available right now. please check again later or try our Tendermint network"
+	NoTMNodes         = "no nodes available right now. please check again later or try our Ethereum network"
 )

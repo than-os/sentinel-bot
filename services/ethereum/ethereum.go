@@ -121,7 +121,7 @@ func AskForEthWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 	if len(nodes) == 0 {
 		btnOpts := []string{constants.TenderMintNetwork}
 		opts := models.ButtonHelper{Type: constants.ReplyButton, Labels: btnOpts}
-		services.Send(b, u, constants.NoEthNodes, opts)
+		services.Send(b, u, templates.NoEthNodes, opts)
 		return
 	}
 
@@ -139,7 +139,7 @@ func AskForTendermintWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB,
 	if len(nodes) == 0 {
 		btnOpts := []string{constants.EthNetwork}
 		opts := models.ButtonHelper{Type: constants.ReplyButton, Labels: btnOpts}
-		services.Send(b, u, constants.NoTMNodes, opts)
+		services.Send(b, u, templates.NoTMNodes, opts)
 		return
 	}
 
@@ -218,7 +218,7 @@ func HandleTxHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []m
 			{Label: nodes[i].Username, URL: uri},
 		}
 		opts := models.ButtonHelper{Type: constants.InlineButton, InlineKeyboardOpts: btnOpts}
-		services.Send(b, u, constants.Success, opts)
+		services.Send(b, u, templates.Success, opts)
 		return
 	}
 

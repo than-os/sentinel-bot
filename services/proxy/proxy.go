@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/jasonlvhit/gocron"
 	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo/ldb"
 	"github.com/than-os/sentinel-bot/dbo/models"
 	"io/ioutil"
-	"log"
 	"math"
 	"math/rand"
 	"net/http"
@@ -60,13 +60,14 @@ func StrongPassword(n int) string {
 }
 
 func AddUser(ipAddr, userName string, db ldb.BotDB, passwordForNetwork string) error {
+	var res models.UserResp
 
 	err := DeleteUser(userName, ipAddr)
 	if err != nil {
 		return err
 	}
 
-	password := StrongPassword(6)
+	password := StrongPassword(constants.PasswordLength)
 	uri := fmt.Sprintf(constants.NodeBaseUrl, ipAddr)
 	err = db.Insert(passwordForNetwork, userName, password)
 	if err != nil {
@@ -82,11 +83,9 @@ func AddUser(ipAddr, userName string, db ldb.BotDB, passwordForNetwork string) e
 	if err != nil {
 		return err
 	}
-	var res models.UserResp
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return err
-	}
+	err = json.NewDecoder(resp.Body).Decode(&res)
 
+	color.Green("Add User: %s", res)
 	return err
 }
 
@@ -103,25 +102,20 @@ func DeleteUser(username, ipAddr string) error {
 	// Create request
 	req, err := http.NewRequest("DELETE", uri, bytes.NewBuffer(b))
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
 	// Fetch Request
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 	defer resp.Body.Close()
 
 	// Read Response Body
 	b, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
 
+	color.Green("Delete User: %s", b)
 	return err
 }
 

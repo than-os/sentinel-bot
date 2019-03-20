@@ -19,6 +19,8 @@ func ReplyButtons(opts []string) [][]tgbotapi.KeyboardButton {
 	return btns
 }
 
+
+
 func InlineButtons(opts []models.InlineButtonOptions) [][]tgbotapi.InlineKeyboardButton {
 	var btns [][]tgbotapi.InlineKeyboardButton
 
@@ -29,6 +31,13 @@ func InlineButtons(opts []models.InlineButtonOptions) [][]tgbotapi.InlineKeyboar
 				URL:  &opt.URL,
 			},
 		})
+	}
+
+	c := tgbotapi.NewMessage(1234566, "message")
+	c.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
+		InlineKeyboard: [][]tgbotapi.InlineKeyboardButton{
+
+		},
 	}
 
 	return btns

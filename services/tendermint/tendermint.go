@@ -122,7 +122,7 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 			Type:               constants.InlineButton,
 			InlineKeyboardOpts: btnOpts,
 		}
-		services.Send(b, u, constants.Success, opts)
+		services.Send(b, u, templates.Success, opts)
 		return
 	}
 
