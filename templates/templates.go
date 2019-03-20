@@ -24,4 +24,5 @@ Ethereum Wallet Attached: <b>%s</b>`
 	ConnectMessage    = "please click on the button below to connect to Sentinel's SOCKS5 Proxy"
 	NoEthNodes        = "no nodes available right now. please check again later or try our Tendermint network"
 	NoTMNodes         = "no nodes available right now. please check again later or try our Ethereum network"
+	InvalidOption     = "invalid option"
 )
