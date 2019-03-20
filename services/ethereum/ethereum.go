@@ -3,7 +3,7 @@ package ethereum
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/than-os/sentinel-bot/services"
+	"github.com/than-os/sentinel-bot/helpers"
 	"math"
 	"net/http"
 	"strconv"
@@ -30,23 +30,23 @@ func HandleWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 			_, _ = b.Send(c)
 			return
 		}
-		services.Send(b, u, "Attached the ETH wallet to user successfully")
+		helpers.Send(b, u, "Attached the ETH wallet to user successfully")
 		opts := models.ButtonHelper{
 			Type:   constants.ReplyButton,
 			Labels: []string{constants.TenD, constants.OneM, constants.ThreeM},
 		}
-		services.Send(b, u, templates.AskForBW, opts)
+		helpers.Send(b, u, templates.AskForBW, opts)
 
 		err = db.Insert(constants.EthAddr, u.Message.From.UserName, u.Message.Text)
 		if err != nil {
-			services.Send(b, u, "could not store your wallet")
+			helpers.Send(b, u, "could not store your wallet")
 			return
 		}
 
 		return
 	}
 
-	services.Send(b, u, "internal bot error")
+	helpers.Send(b, u, "internal bot error")
 	return
 }
 
@@ -61,29 +61,29 @@ func HandleEthBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mo
 		}
 		switch u.Message.Text {
 		case constants.TenD:
-			services.SubscriptionPeriod(b, u, db,
+			helpers.SubscriptionPeriod(b, u, db,
 				constants.TenDays, constants.EthNetwork, constants.NodeBasePrice, constants.TenD,
 			)
 		case constants.OneM:
-			services.SubscriptionPeriod(b, u, db,
+			helpers.SubscriptionPeriod(b, u, db,
 				constants.Month, constants.EthNetwork, constants.NodeMonthPrice, constants.OneM,
 			)
 		case constants.ThreeM:
-			services.SubscriptionPeriod(b, u, db,
+			helpers.SubscriptionPeriod(b, u, db,
 				constants.ThreeMonths, constants.EthNetwork, constants.NodeThreeMonthPrice, constants.ThreeM,
 			)
 		}
 
-		services.Send(b, u, templates.AskToSelectANode)
+		helpers.Send(b, u, templates.AskToSelectANode)
 		for idx, node := range nodes {
 			geo, err := proxy.GetGeoLocation(node.IPAddr)
 
 			if err != nil {
-				services.Send(b, u, err.Error())
+				helpers.Send(b, u, err.Error())
 				return
 			}
 			msg := fmt.Sprintf(templates.NodeList, strconv.Itoa(idx+1), geo.Country, node.Username, node.WalletAddress)
-			services.Send(b, u, msg)
+			helpers.Send(b, u, msg)
 		}
 
 		return
@@ -113,7 +113,7 @@ func HandleEthBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mo
 		Type:               constants.InlineButton,
 		InlineKeyboardOpts: buttonOptions,
 	}
-	services.Send(b, u, msg, opts)
+	helpers.Send(b, u, msg, opts)
 }
 
 func AskForEthWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
@@ -121,17 +121,17 @@ func AskForEthWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 	if len(nodes) == 0 {
 		btnOpts := []string{constants.TenderMintNetwork}
 		opts := models.ButtonHelper{Type: constants.ReplyButton, Labels: btnOpts}
-		services.Send(b, u, templates.NoEthNodes, opts)
+		helpers.Send(b, u, templates.NoEthNodes, opts)
 		return
 	}
 
 	err := db.Insert(constants.BlockchainNetwork, u.Message.From.UserName, constants.EthNetwork)
 	if err != nil {
-		services.Send(b, u, "internal bot error")
+		helpers.Send(b, u, "internal bot error")
 		return
 	}
 
-	services.Send(b, u, templates.AskForEthWallet)
+	helpers.Send(b, u, templates.AskForEthWallet)
 }
 
 func AskForTendermintWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
@@ -139,34 +139,34 @@ func AskForTendermintWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB,
 	if len(nodes) == 0 {
 		btnOpts := []string{constants.EthNetwork}
 		opts := models.ButtonHelper{Type: constants.ReplyButton, Labels: btnOpts}
-		services.Send(b, u, templates.NoTMNodes, opts)
+		helpers.Send(b, u, templates.NoTMNodes, opts)
 		return
 	}
 
 	err := db.Insert(constants.BlockchainNetwork, u.Message.From.UserName, constants.TenderMintNetwork)
 	if err != nil {
-		services.Send(b, u, "internal bot error")
+		helpers.Send(b, u, "internal bot error")
 		return
 	}
 
-	services.Send(b, u, templates.AskForTMWallet)
+	helpers.Send(b, u, templates.AskForTMWallet)
 }
 
 func HandleTxHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
 	resp, err := db.Read(constants.Node, u.Message.From.UserName)
 	if err != nil {
-		services.Send(b, u, templates.Error)
+		helpers.Send(b, u, templates.Error)
 		return
 	}
 	UserWallet, err := db.Read(constants.EthAddr, u.Message.From.UserName)
 	if err != nil {
-		services.Send(b, u, templates.Error)
+		helpers.Send(b, u, templates.Error)
 		return
 	}
 
 	strToInt, err := strconv.Atoi(resp.Value)
 	if err != nil {
-		services.Send(b, u, templates.Error)
+		helpers.Send(b, u, templates.Error)
 		return
 	}
 
@@ -175,54 +175,54 @@ func HandleTxHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []m
 		uri := fmt.Sprintf(constants.ProxyURL, nodes[i].IPAddr, strconv.Itoa(nodes[i].Port), nodes[i].Username, nodes[i].Password)
 		err := db.Insert(constants.IPAddr, u.Message.From.UserName, nodes[i].IPAddr)
 		if err != nil {
-			services.Send(b, u, templates.Error)
+			helpers.Send(b, u, templates.Error)
 			return
 		}
 		err = db.Insert(constants.AssignedNodeURI, u.Message.From.UserName, uri)
 
 		if err != nil {
-			services.Send(b, u, templates.Error)
+			helpers.Send(b, u, templates.Error)
 			return
 		}
 		err = db.Insert(constants.IsAuth, u.Message.From.UserName, "true")
 		if err != nil {
-			services.Send(b, u, templates.Error)
+			helpers.Send(b, u, templates.Error)
 			return
 		}
-		services.Send(b, u, "Thanks for submitting the TX-HASH. We're validating it")
-		services.Send(b, u, "creating new user for "+u.Message.From.UserName+"...")
+		helpers.Send(b, u, "Thanks for submitting the TX-HASH. We're validating it")
+		helpers.Send(b, u, "creating new user for "+u.Message.From.UserName+"...")
 
 		node := nodes[i]
 		err = proxy.AddUser(node.IPAddr, u.Message.From.UserName, db, constants.Password)
 		if err != nil {
-			services.Send(b, u, "Error while creating SOCKS5 user for "+u.Message.From.UserName)
+			helpers.Send(b, u, "Error while creating SOCKS5 user for "+u.Message.From.UserName)
 			return
 		}
 		pass, err := db.Read(constants.Password, u.Message.From.UserName)
 		if err != nil {
-			services.Send(b, u, templates.Error)
+			helpers.Send(b, u, templates.Error)
 			return
 		}
 		uri = fmt.Sprintf(constants.ProxyURL, node.IPAddr, strconv.Itoa(node.Port), u.Message.From.UserName, pass.Value)
 		err = db.Insert(constants.IPAddr, u.Message.From.UserName, nodes[i].IPAddr)
 		if err != nil {
-			services.Send(b, u, templates.Error)
+			helpers.Send(b, u, templates.Error)
 			return
 		}
 		err = db.Insert(constants.AssignedNodeURI, u.Message.From.UserName, uri)
 		if err != nil {
-			services.Send(b, u, templates.Error)
+			helpers.Send(b, u, templates.Error)
 			return
 		}
 		btnOpts := []models.InlineButtonOptions{
 			{Label: nodes[i].Username, URL: uri},
 		}
 		opts := models.ButtonHelper{Type: constants.InlineButton, InlineKeyboardOpts: btnOpts}
-		services.Send(b, u, templates.Success, opts)
+		helpers.Send(b, u, templates.Success, opts)
 		return
 	}
 
-	services.Send(b, u, "invalid transaction hash. Please try again")
+	helpers.Send(b, u, "invalid transaction hash. Please try again")
 }
 
 func FindTxByHash(txHash, walletAddr string, u tgbotapi.Update, db ldb.BotDB) bool {
@@ -296,7 +296,7 @@ func HandleNodeID(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []m
 	NodeId := u.Message.Text
 	idx, _ := strconv.Atoi(NodeId)
 	if idx > len(nodes) {
-		services.Send(b, u, templates.Error)
+		helpers.Send(b, u, templates.Error)
 		return
 	}
 	values := []models.KV{
@@ -305,17 +305,17 @@ func HandleNodeID(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []m
 	}
 	err := db.MultiWriter(values, u.Message.From.UserName)
 	if err != nil {
-		services.Send(b, u, templates.Error)
+		helpers.Send(b, u, templates.Error)
 		return
 	}
 
 	kv, err := db.Read(constants.NodePrice, u.Message.From.UserName)
 	if err != nil {
-		services.Send(b, u, templates.Error)
+		helpers.Send(b, u, templates.Error)
 		return
 	}
 
 	msg := fmt.Sprintf(templates.AskForPayment, kv.Value)
-	services.Send(b, u, msg)
-	services.Send(b, u, nodes[idx-1].WalletAddress)
+	helpers.Send(b, u, msg)
+	helpers.Send(b, u, nodes[idx-1].WalletAddress)
 }

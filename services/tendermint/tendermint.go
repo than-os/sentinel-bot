@@ -8,7 +8,7 @@ import (
 	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo/ldb"
 	"github.com/than-os/sentinel-bot/dbo/models"
-	"github.com/than-os/sentinel-bot/services"
+	"github.com/than-os/sentinel-bot/helpers"
 	"github.com/than-os/sentinel-bot/services/proxy"
 	"github.com/than-os/sentinel-bot/templates"
 	"gopkg.in/telegram-bot-api.v4"
@@ -63,7 +63,7 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 	respToStr := fmt.Sprintf("%s", resp.Value)
 	strToInt, err := strconv.Atoi(respToStr)
 	if err != nil {
-		services.Send(b, u, templates.Error)
+		helpers.Send(b, u, templates.Error)
 		return
 	}
 
@@ -78,22 +78,22 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 		}
 		err := db.MultiWriter(values, u.Message.From.UserName)
 		if err != nil {
-			services.Send(b, u, templates.Error)
+			helpers.Send(b, u, templates.Error)
 			return
 		}
 
-		services.Send(b, u, "Thanks for submitting the TX-HASH. We're validating it")
-		services.Send(b, u, "creating new user for "+u.Message.From.UserName+"...")
+		helpers.Send(b, u, "Thanks for submitting the TX-HASH. We're validating it")
+		helpers.Send(b, u, "creating new user for "+u.Message.From.UserName+"...")
 
 		node := nodes[i]
 		err = proxy.AddUser(node.IPAddr, u.Message.From.UserName, db, constants.PasswordTM)
 		if err != nil {
-			services.Send(b, u, templates.Error)
+			helpers.Send(b, u, templates.Error)
 			return
 		}
 		pass, err := db.Read(constants.PasswordTM, u.Message.From.UserName)
 		if err != nil {
-			services.Send(b, u, templates.Error)
+			helpers.Send(b, u, templates.Error)
 			return
 		}
 		url = fmt.Sprintf(constants.ProxyURL, nodes[i].IPAddr, strconv.Itoa(nodes[i].Port), u.Message.From.UserName, pass.Value)
@@ -111,7 +111,7 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 
 		err = db.MultiWriter(kv, u.Message.From.UserName)
 		if err != nil {
-			services.Send(b, u, templates.Error)
+			helpers.Send(b, u, templates.Error)
 			return
 		}
 
@@ -122,11 +122,11 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 			Type:               constants.InlineButton,
 			InlineKeyboardOpts: btnOpts,
 		}
-		services.Send(b, u, templates.Success, opts)
+		helpers.Send(b, u, templates.Success, opts)
 		return
 	}
 
-	services.Send(b, u, "invalid txn hash. please try again")
+	helpers.Send(b, u, "invalid txn hash. please try again")
 }
 
 func IsValidTMTxn(u tgbotapi.Update, db ldb.BotDB) bool {
@@ -174,7 +174,7 @@ func HandleWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 	if IsValidTMAccount(u) != "" {
 		err := db.Insert(constants.WalletTM, u.Message.From.UserName, u.Message.Text)
 		if err != nil {
-			services.Send(b, u, templates.Error)
+			helpers.Send(b, u, templates.Error)
 			return
 		}
 
@@ -183,11 +183,11 @@ func HandleWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 			Type:   constants.ReplyButton,
 			Labels: btnOpts,
 		}
-		services.Send(b, u, "Attached Tendermint wallet to user successfully")
-		services.Send(b, u, `Please select how much bandwidth you need by clicking on one of the buttons below: `, opts)
+		helpers.Send(b, u, "Attached Tendermint wallet to user successfully")
+		helpers.Send(b, u, `Please select how much bandwidth you need by clicking on one of the buttons below: `, opts)
 		return
 	}
-	services.Send(b, u, templates.Error)
+	helpers.Send(b, u, templates.Error)
 	return
 }
 
@@ -197,41 +197,41 @@ func HandleBWTM(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mod
 	if err != nil {
 		err := db.Insert(constants.BandwidthTM, u.Message.From.UserName, u.Message.Text[:2])
 		if err != nil {
-			services.Send(b, u, templates.Error)
+			helpers.Send(b, u, templates.Error)
 			return
 		}
 		switch u.Message.Text {
 		case constants.TenD:
-			services.SubscriptionPeriod(b, u, db,
+			helpers.SubscriptionPeriod(b, u, db,
 				constants.TenDays, constants.TenderMintNetwork, constants.NodeBasePrice, constants.TenD,
 			)
 		case constants.OneM:
-			services.SubscriptionPeriod(b, u, db,
+			helpers.SubscriptionPeriod(b, u, db,
 				constants.Month, constants.TenderMintNetwork, constants.NodeMonthPrice, constants.OneM,
 			)
 		case constants.ThreeM:
-			services.SubscriptionPeriod(b, u, db,
+			helpers.SubscriptionPeriod(b, u, db,
 				constants.ThreeMonths, constants.TenderMintNetwork, constants.NodeThreeMonthPrice, constants.ThreeM,
 			)
 		}
 
-		services.Send(b, u, templates.AskToSelectANode)
+		helpers.Send(b, u, templates.AskToSelectANode)
 		for idx, node := range nodes {
 			geo, err := proxy.GetGeoLocation(node.IPAddr)
 
 			if err != nil {
-				services.Send(b, u, err.Error())
+				helpers.Send(b, u, err.Error())
 				return
 			}
 			msg := fmt.Sprintf(templates.NodeList, strconv.Itoa(idx+1), geo.Country, node.Username, node.WalletAddress)
-			services.Send(b, u, msg)
+			helpers.Send(b, u, msg)
 		}
 		return
 	}
 
 	nodeIdx, err := strconv.ParseInt(resp.Value[0:2], 10, 64)
 	if err != nil {
-		services.Send(b, u, err.Error())
+		helpers.Send(b, u, err.Error())
 		return
 	}
 
@@ -254,14 +254,14 @@ func HandleBWTM(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mod
 		Type:               constants.InlineButton,
 		InlineKeyboardOpts: btnOpts,
 	}
-	services.Send(b, u, msg, opts)
+	helpers.Send(b, u, msg, opts)
 }
 
 func HandleTMNodeID(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
 	NodeId := u.Message.Text
 	idx, _ := strconv.Atoi(NodeId)
 	if idx > len(nodes) {
-		services.Send(b, u, templates.Error)
+		helpers.Send(b, u, templates.Error)
 		return
 	}
 
@@ -271,19 +271,19 @@ func HandleTMNodeID(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes [
 	}
 	err := db.MultiWriter(values, u.Message.From.UserName)
 	if err != nil {
-		services.Send(b, u, templates.Error)
+		helpers.Send(b, u, templates.Error)
 		return
 	}
 
 	kv, err := db.Read(constants.NodePriceTM, u.Message.From.UserName)
 	if err != nil {
-		services.Send(b, u, templates.Error)
+		helpers.Send(b, u, templates.Error)
 		return
 	}
 	msg := fmt.Sprintf(templates.AskForPayment, kv.Value)
 
-	services.Send(b, u, msg)
-	services.Send(b, u, nodes[idx-1].WalletAddress)
+	helpers.Send(b, u, msg)
+	helpers.Send(b, u, nodes[idx-1].WalletAddress)
 }
 
 func parseTxnAmount(amount string) string {

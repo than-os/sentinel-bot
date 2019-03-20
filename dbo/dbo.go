@@ -2,12 +2,12 @@ package dbo
 
 import (
 	"fmt"
+	"github.com/than-os/sentinel-bot/helpers"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"github.com/than-os/globex-bot/utils"
 	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo/ldb"
 	"github.com/than-os/sentinel-bot/dbo/models"
@@ -116,7 +116,7 @@ func (l Level) Iterate() []models.User {
 	}
 
 	for _, user := range w {
-		username := utils.GetTelegramUsername(user.Key)
+		username := helpers.GetTelegramUsername(user.Key)
 		var participant models.User
 		if username != "" {
 			for _, u := range w {

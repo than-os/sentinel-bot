@@ -1,4 +1,4 @@
-package services
+package helpers
 
 import (
 	"fmt"
@@ -8,6 +8,8 @@ import (
 	"github.com/than-os/sentinel-bot/dbo/models"
 	"github.com/than-os/sentinel-bot/templates"
 	"gopkg.in/telegram-bot-api.v4"
+	"log"
+	"strings"
 	"time"
 )
 
@@ -65,4 +67,20 @@ func SubscriptionPeriod(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, t t
 	msg := fmt.Sprintf(templates.BWPeriods, period)
 	Send(b, u, msg)
 
+}
+
+func GetTelegramUsername(username string) string {
+
+	//username :=  fmt.Sprintf("%s", b)
+	//log.Println("\n\n what does it look like? : ", username, "\n\n")
+	if len(username) < 1 {
+		log.Println("invalid username")
+		return ""
+	}
+
+	if strings.Contains(username, "telegram") {
+		return strings.TrimPrefix(username, "telegram")
+	}
+
+	return ""
 }
