@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/fatih/color"
 	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo/ldb"
 	"github.com/than-os/sentinel-bot/dbo/models"
@@ -15,7 +15,6 @@ import (
 	"github.com/than-os/sentinel-bot/templates"
 	"gopkg.in/telegram-bot-api.v4"
 	"math"
-	"net/http"
 	"regexp"
 	"strconv"
 	"time"
@@ -29,28 +28,6 @@ func Greet(b *tgbotapi.BotAPI, u tgbotapi.Update) {
 		Type: constants.ReplyButton, Labels: btnOpts,
 	}
 	helpers.Send(b, u, greet, opts)
-}
-
-func GetNodes() (models.Nodes, error) {
-	var N models.Nodes
-	var body []models.TONNode
-	resp, err := http.Get(constants.SentinelTONURL)
-	if err != nil {
-		return N, err
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		return N, err
-	}
-	defer resp.Body.Close()
-
-	for _, node := range body {
-		if node.Type == constants.NodeType {
-			N.TMNodes = append(N.TMNodes, node)
-		} else {
-			N.EthNodes = append(N.EthNodes, node)
-		}
-	}
-	return N, err
 }
 
 func isEthAddr(u tgbotapi.Update) string {
@@ -88,7 +65,7 @@ func MainHandler(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mode
 	case constants.EthNetwork:
 		go ethereum.AskForEthWallet(b, u, db, nodes.EthNodes)
 	case constants.TenderMintNetwork:
-		go ethereum.AskForTendermintWallet(b, u, db, nodes.TMNodes)
+		go tendermint.AskForTendermintWallet(b, u, db, nodes.TMNodes)
 	case isEthAddr(u):
 		go ethereum.HandleWallet(b, u, db)
 	case tendermint.IsValidTMAccount(u):
@@ -183,34 +160,71 @@ func ShowMyInfo(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 }
 
 func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.Nodes) {
+
 	network, err := db.Read(constants.BlockchainNetwork, u.Message.From.UserName)
 	if err != nil {
-		helpers.Send(b, u, templates.BWAttachmentError)
+		helpers.Send(b, u, templates.NoNetworkSelected)
 		return
 	}
 	if network.Value == constants.TenderMintNetwork {
+		TMState := helpers.GetState(b, u, constants.TMState, db)
+		color.Green("******* STATE NODE ID = %d *******", TMState)
+		if TMState <= constants.TMState1 {
+			helpers.Send(b,u, templates.FollowSequence)
+			return
+		}
 		tendermint.HandleTMNodeID(b, u, db, nodes.TMNodes)
+		helpers.SetState(b, u, constants.TMState, constants.TMState3, db)
 	}
 
 	if network.Value == constants.EthNetwork {
+		EthState := helpers.GetState(b, u, constants.EthState, db)
+		color.Green("******* STATE NODE ID = %d *******", EthState)
+		if EthState <= constants.EthState1 {
+			helpers.Send(b,u, templates.FollowSequence)
+			return
+		}
 		ethereum.HandleNodeID(b, u, db, nodes.EthNodes)
+		helpers.SetState(b, u, constants.EthState, constants.EthState3, db)
 
 	}
 
 }
 
 func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.Nodes) {
+	TMState := helpers.GetState(b, u, constants.TMState, db)
+	color.Green("******* STATE NODE ID = %d *******", TMState)
+	if TMState <= constants.TMState0 {
+		helpers.Send(b,u, templates.FollowSequence)
+		return
+	}
+
 	network, err := db.Read(constants.BlockchainNetwork, u.Message.From.UserName)
 	if err != nil {
 		helpers.Send(b, u, templates.BWAttachmentError)
 	}
 
 	if network.Value == constants.TenderMintNetwork {
+		state := helpers.GetState(b, u, constants.TMState, db)
+		color.Green("******* STATE BW = %d *******", state)
+
+		if state <= constants.TMState0 {
+			helpers.Send(b,u, templates.FollowSequence)
+			return
+		}
 		tendermint.HandleBWTM(b, u, db, nodes.TMNodes)
+		helpers.SetState(b, u, constants.TMState, constants.TMState2, db)
 	}
 
 	if network.Value == constants.EthNetwork {
+		EthState := helpers.GetState(b, u, constants.EthState, db)
+		color.Green("******* STATE NODE ID = %d *******", EthState)
+		if EthState <= constants.EthState0 {
+			helpers.Send(b,u, templates.FollowSequence)
+			return
+		}
 		ethereum.HandleEthBW(b, u, db, nodes.EthNodes)
+		helpers.SetState(b, u, constants.EthState, constants.TMState2, db)
 	}
 
 }

@@ -59,7 +59,7 @@ func StrongPassword(n int) string {
 	return string(b)
 }
 
-func AddUser(ipAddr, userName string, db ldb.BotDB, passwordForNetwork string) error {
+func AddUser(ipAddr, userName, passwordForNetwork string, db ldb.BotDB) error {
 	var res models.UserResp
 
 	err := DeleteUser(userName, ipAddr)

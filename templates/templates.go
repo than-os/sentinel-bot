@@ -25,4 +25,6 @@ Ethereum Wallet Attached: <b>%s</b>`
 	NoEthNodes        = "no nodes available right now. please check again later or try our Tendermint network"
 	NoTMNodes         = "no nodes available right now. please check again later or try our Ethereum network"
 	InvalidOption     = "invalid option"
+	FollowSequence    = "please try to follow the flow for the bot to work efficiently for you"
+	NoNetworkSelected = "you have not selected a blockchain network to part of. Please select a network"
 )

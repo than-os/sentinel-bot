@@ -1,10 +1,6 @@
 package models
 
-import (
-	"time"
-
-	"github.com/globalsign/mgo/bson"
-)
+import "time"
 
 type KV struct {
 	Key   string
@@ -60,15 +56,14 @@ type Nodes struct {
 }
 
 type TONNode struct {
-	ID            bson.ObjectId `json:"id"`
-	Type          string        `json:"type"`
-	WalletAddress string        `json:"walletAddr"`
-	Price         float64       `json:"price"`
-	Country       string        `json:"country"`
-	IPAddr        string        `json:"ipAddr"`
-	Port          int           `json:"port"`
-	Username      string        `json:"userName"`
-	Password      string        `json:"password"`
+	Type          string  `json:"type"`
+	WalletAddress string  `json:"walletAddr"`
+	Price         float64 `json:"price"`
+	Country       string  `json:"country"`
+	IPAddr        string  `json:"ipAddr"`
+	Port          int     `json:"port"`
+	Username      string  `json:"userName"`
+	Password      string  `json:"password"`
 }
 
 type TMTxn struct {

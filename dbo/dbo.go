@@ -3,15 +3,14 @@ package dbo
 import (
 	"fmt"
 	"github.com/than-os/sentinel-bot/helpers"
+	"strconv"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo/ldb"
 	"github.com/than-os/sentinel-bot/dbo/models"
-	"github.com/than-os/sentinel-bot/handlers"
 )
 
 type Level struct {
@@ -21,13 +20,67 @@ type Level struct {
 
 func NewDB() (ldb.BotDB, *models.Nodes, error) {
 
-	nodes, err := handlers.GetNodes()
+	nodes, err := helpers.GetNodes()
 	if err != nil {
 		return nil, nil, err
 	}
 
 	db, err := leveldb.OpenFile("./store", nil)
 	return Level{db: db}, &nodes, err
+}
+
+// state type is int16 because our app is never going to exceed the limits of int8
+func (l Level) SetEthState(username string, state int8) error {
+	return l.Insert(constants.EthState, username, strconv.Itoa(int(state)))
+}
+
+// state type is int16 because our app is never going to exceed the limits of int8
+func (l Level) GetEthState(username string) (int8, error) {
+	pair, err := l.Read(constants.EthState, username)
+	if err != nil {
+		return 0, err
+	}
+	i, e := strconv.ParseInt(pair.Value, 10, 8)
+
+	return int8(i), e
+}
+
+func (l Level) SetTMState(username string, state int8) error {
+	return l.Insert(constants.TMState, username, strconv.Itoa(int(state)))
+}
+
+func (l Level) GetTMState(username string) (int8, error) {
+	pair, err := l.Read(constants.TMState, username)
+	if err != nil {
+		return 0, err
+	}
+	i, e := strconv.ParseInt(pair.Value, 10, 8)
+
+	return int8(i), e
+}
+
+func (l Level) EthUserState(username string) []models.KV {
+
+	keys := []string{
+		constants.EthAddr, constants.Timestamp, constants.Node,
+		constants.Bandwidth, constants.NodeWallet, constants.NodePrice,
+		constants.IPAddr, constants.AssignedNodeURI, constants.IsAuth,
+		constants.Password, constants.EthState,
+	}
+
+	return l.MultiReader(keys, username)
+}
+
+func (l Level) TMUserState(username string) []models.KV {
+
+	keys := []string{
+		constants.WalletTM, constants.TimestampTM, constants.NodeTM,
+		constants.BandwidthTM, constants.NodeWalletTM, constants.NodePriceTM,
+		constants.IPAddrTM, constants.AssignedNodeURITM, constants.IsAuthTM,
+		constants.PasswordTM, constants.TMState,
+	}
+
+	return l.MultiReader(keys, username)
 }
 
 func (l Level) Insert(key, username, value string) error {
@@ -69,16 +122,18 @@ func (l Level) MultiWriter(pairs []models.KV, username string) error {
 	return nil
 }
 
-func (l Level) MultiReader(keys []string, username string) ([]models.KV, error) {
+func (l Level) MultiReader(keys []string, username string) []models.KV {
 	var result []models.KV
 	for _, key := range keys {
 		kv, err := l.Read(key, username)
 		if err != nil {
-			return result, err
+			continue
+			//return result, err
 		}
 		result = append(result, kv)
 	}
-	return result, nil
+	//return result, nil
+	return result
 }
 
 func (l Level) IterateExpired() ([]models.ExpiredUsers, error) {
@@ -124,9 +179,8 @@ func (l Level) Iterate() []models.User {
 					participant.EthAddr = u.Value
 					participant.TelegramUsername = username
 				} else if u.Key == constants.Timestamp+username {
-					t, err := time.Parse(time.RFC3339, fmt.Sprintf("%s", u.Value))
+					t, err := time.Parse(time.RFC3339, u.Value)
 					if err != nil {
-						color.Red("%s", "error while adding user timestamp")
 						return []models.User{}
 					}
 					participant.Timestamp = t
@@ -134,7 +188,6 @@ func (l Level) Iterate() []models.User {
 
 				}
 			}
-			color.Cyan("user: %v", user)
 		}
 		if participant.EthAddr != "" && participant.TelegramUsername != "" {
 			p = append(p, participant)

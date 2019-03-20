@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/than-os/sentinel-bot/buttons"
 	"github.com/than-os/sentinel-bot/constants"
@@ -9,6 +10,7 @@ import (
 	"github.com/than-os/sentinel-bot/templates"
 	"gopkg.in/telegram-bot-api.v4"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -83,4 +85,62 @@ func GetTelegramUsername(username string) string {
 	}
 
 	return ""
+}
+
+func GetNodes() (models.Nodes, error) {
+	var body []models.TONNode
+	var N models.Nodes
+	resp, err := http.Get(constants.SentinelTONURL)
+	if err != nil {
+		return N, err
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		return N, err
+	}
+	defer resp.Body.Close()
+
+	for _, node := range body {
+		if node.Type == constants.NodeType {
+			N.TMNodes = append(N.TMNodes, node)
+		} else {
+			N.EthNodes = append(N.EthNodes, node)
+		}
+	}
+	return N, err
+}
+
+func SetState(b *tgbotapi.BotAPI, u tgbotapi.Update, network string , state int8, db ldb.BotDB) {
+	if network == constants.TMState {
+		err := db.SetTMState(u.Message.From.UserName, state)
+		if err != nil {
+			Send(b, u, "invalid tendermint user set state")
+			return
+		}
+		return
+	}
+	err := db.SetEthState(u.Message.From.UserName, state)
+	if err != nil {
+		Send(b, u, "invalid ethereum user set state")
+		return
+	}
+}
+
+func GetState(b *tgbotapi.BotAPI, u tgbotapi.Update, network string, db ldb.BotDB) int8 {
+	if network == constants.TMState {
+		state, err := db.GetTMState(u.Message.From.UserName)
+		if err != nil {
+			Send(b, u, "invalid tendermint user get state")
+			return constants.NoState
+		}
+
+		return state
+	}
+
+	state, err := db.GetEthState(u.Message.From.UserName)
+	if err != nil {
+		Send(b, u, "invalid ethereum user get state")
+		return constants.NoState
+	}
+
+	return state
 }
