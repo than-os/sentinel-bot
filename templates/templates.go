@@ -31,4 +31,12 @@ Ethereum Wallet Attached: <b>%s</b>`
 BALANCE: %.3f $SUT
 Minimum required balance is 10 $SUT. Please get some $SUTs and resubmit your Tendermint Wallet.
 If you do not know how to get Sentinel Utilty Tokens, please ask the team @sentinel_co'`
+	AboutSentinel = `Sentinel is an interoperable secure network layer offering the Sentinel Service Chain 
+exclusively for distributed & decentralized native services like 
+- dVPN, Sentrix (dChat and dVoIP) and more. 
+Website: https://sentinel.co
+Github: https://github.com/sentinel-official/sentinel
+Twitter: http://twitter.com/Sentinel_co`
+	TXNNotFound = `could not find the transaction hash in the network. A possible reason could be that you did the
+transaction on a different Network as of the bot.`
 )

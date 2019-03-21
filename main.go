@@ -3,8 +3,10 @@ package main
 import (
 	"github.com/fatih/color"
 	"github.com/joho/godotenv"
+	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo"
 	"github.com/than-os/sentinel-bot/handlers"
+	"github.com/than-os/sentinel-bot/helpers"
 	"gopkg.in/telegram-bot-api.v4"
 	"log"
 	"os"
@@ -44,25 +46,29 @@ func main() {
 			return
 		}
 
-		handlers.MainHandler(bot, update, db, *nodes)
+		// handle the commands for the bot
 		if update.Message.IsCommand() {
 			switch update.Message.Command() {
 			case "mynode":
 				handlers.ShowMyNode(bot, update, db)
 			case "start":
-				handlers.Greet(bot, update)
+				handlers.Greet(bot, update, db)
 			case "restart":
 				handlers.Restart(bot, update, db)
 			case "info":
 				handlers.ShowMyInfo(bot, update, db)
 			case "eth":
 				handlers.ShowEthWallet(bot, update, db)
-			case "beta":
-				//tendermint.FindTmTxnByHash("")
+			case "about":
+				handlers.AboutSentinel(bot, update)
 			default:
 				return
 			}
 		}
+		// handle the app flow for bot
+		handlers.MainHandler(bot, update, db, *nodes)
+		TMState := helpers.GetState(bot, update, constants.TMState, db)
+		color.Green("******* APP STATE = %d *******", TMState)
 
 	}
 

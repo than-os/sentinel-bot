@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-func IsWalletHaveBalance(address string) (float64, bool) {
+func CheckTMBalance(address string) (float64, bool) {
 	var body models.TMMsg
 	resp, err := http.Get(fmt.Sprintf(constants.TMBalanceURL, address))
 	if err != nil {
@@ -21,10 +21,10 @@ func IsWalletHaveBalance(address string) (float64, bool) {
 		return 0, false
 	}
 
-	userBalance, err := strconv.ParseFloat(body.Value.Coins[0].Amount,64)
-	if err != nil || userBalance > constants.MinBal {
-		return userBalance / math.Pow(10, 8), true
+	userBalance, err := strconv.ParseFloat(body.Value.Coins[0].Amount, 64)
+	if err != nil || userBalance < constants.MinBal {
+		return userBalance / math.Pow(10, 8), false
 	}
 
-	return userBalance, true
+	return userBalance / math.Pow(10, 8), true
 }

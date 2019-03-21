@@ -74,4 +74,5 @@ const (
 	TMState2
 	TMState3
 	TMState4
+	TMState5
 )
