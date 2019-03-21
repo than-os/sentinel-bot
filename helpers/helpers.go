@@ -19,14 +19,14 @@ func Send(b *tgbotapi.BotAPI, u tgbotapi.Update, msg string, opts ...models.Butt
 	c := tgbotapi.NewMessage(u.Message.Chat.ID, msg)
 
 	for _, o := range opts {
-		if o.Type == "replyButton" {
+		if o.Type == constants.ReplyButton {
 			c.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
 				Keyboard:        buttons.ReplyButtons(o.Labels),
 				OneTimeKeyboard: true,
 				ResizeKeyboard:  true,
 			}
 		}
-		if o.Type == "inlineButton" {
+		if o.Type == constants.InlineButton {
 			c.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 				InlineKeyboard: buttons.InlineButtons(o.InlineKeyboardOpts),
 			}

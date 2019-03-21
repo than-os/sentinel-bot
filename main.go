@@ -1,13 +1,15 @@
 package main
 
 import (
+	"log"
+	"os"
+	"runtime/trace"
+
 	"github.com/fatih/color"
 	"github.com/joho/godotenv"
 	"github.com/than-os/sentinel-bot/dbo"
 	"github.com/than-os/sentinel-bot/handlers"
 	"gopkg.in/telegram-bot-api.v4"
-	"log"
-	"os"
 )
 
 func init() {
@@ -17,7 +19,8 @@ func init() {
 }
 
 func main() {
-
+	trace.Start(os.Stdout)
+	defer trace.Stop()
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("BOT_API_KEY"))
 	if err != nil {
 		log.Fatalf("error in instantiating the bot: %v", err)
@@ -30,7 +33,7 @@ func main() {
 		color.Red("error while receiving messages: %s", err)
 		return
 	}
-	color.Green("%s", "started the bot successfully")
+	color.Green("started %s successfully", bot.Self.UserName)
 
 	db, nodes, err := dbo.NewDB()
 	if err != nil {
@@ -43,7 +46,6 @@ func main() {
 		}
 
 		handlers.MainHandler(bot, update, db, *nodes)
-
 		if update.Message.IsCommand() {
 			switch update.Message.Command() {
 			case "mynode":
@@ -62,11 +64,6 @@ func main() {
 				return
 			}
 		}
-		pair, err := db.GetTMState(update.Message.From.UserName)
-		if err != nil {
-			color.Red("******* ERROR = %s *******", err.Error())
-		}
-		color.Green("******* STATE = %d *******", pair)
 
 	}
 
