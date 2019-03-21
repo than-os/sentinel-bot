@@ -10,6 +10,7 @@ import (
 	"github.com/than-os/sentinel-bot/dbo/models"
 	"github.com/than-os/sentinel-bot/helpers"
 	"github.com/than-os/sentinel-bot/services/proxy"
+	"github.com/than-os/sentinel-bot/services/tendermint/validations"
 	"github.com/than-os/sentinel-bot/templates"
 	"gopkg.in/telegram-bot-api.v4"
 	"math"
@@ -221,6 +222,18 @@ func HandleBWTM(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mod
 	resp, err := db.Read(constants.BandwidthTM, u.Message.From.UserName)
 
 	if err != nil {
+
+		kv, _ := db.Read(constants.BandwidthTM, u.Message.From.UserName)
+		if err != nil {
+			helpers.Send(b, u, templates.Error)
+			return
+		}
+
+		if validations.IsWalletHaveBalance(kv.Value) {
+			helpers.Send(b,u, "you don't have enough balance to use this bot")
+			return
+		}
+
 		err := db.Insert(constants.BandwidthTM, u.Message.From.UserName, u.Message.Text[:2])
 		if err != nil {
 			helpers.Send(b, u, templates.Error)
