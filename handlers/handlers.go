@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/fatih/color"
 	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo/ldb"
 	"github.com/than-os/sentinel-bot/dbo/models"
@@ -20,14 +19,19 @@ import (
 	"time"
 )
 
-func Greet(b *tgbotapi.BotAPI, u tgbotapi.Update) {
+func Greet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
+	helpers.SetState(b, u, constants.EthState, constants.EthState0, db)
+	helpers.SetState(b, u, constants.TMState, constants.TMState0, db)
 	greet := fmt.Sprintf(templates.GreetingMsg, u.Message.From.UserName)
-
-	btnOpts := []string{constants.EthNetwork, constants.TenderMintNetwork,}
+	btnOpts := []string{constants.EthNetwork, constants.TenderMintNetwork}
 	opts := models.ButtonHelper{
 		Type: constants.ReplyButton, Labels: btnOpts,
 	}
 	helpers.Send(b, u, greet, opts)
+}
+
+func AboutSentinel(b *tgbotapi.BotAPI, u tgbotapi.Update) {
+	helpers.Send(b, u, templates.AboutSentinel)
 }
 
 func isEthAddr(u tgbotapi.Update) string {
@@ -168,18 +172,18 @@ func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mod
 	}
 	if network.Value == constants.TenderMintNetwork {
 		TMState := helpers.GetState(b, u, constants.TMState, db)
-		color.Green("******* STATE NODE ID = %d *******", TMState)
-		if TMState <= constants.TMState1 {
+		//color.Green("******* STATE NODE ID = %d *******", TMState)
+		if TMState < constants.TMState3 {
 			helpers.Send(b, u, templates.FollowSequence)
 			return
 		}
 		tendermint.HandleTMNodeID(b, u, db, nodes.TMNodes)
-		helpers.SetState(b, u, constants.TMState, constants.TMState3, db)
+		helpers.SetState(b, u, constants.TMState, constants.TMState4, db)
 	}
 
 	if network.Value == constants.EthNetwork {
 		EthState := helpers.GetState(b, u, constants.EthState, db)
-		color.Green("******* STATE NODE ID = %d *******", EthState)
+		//color.Green("******* STATE NODE ID = %d *******", EthState)
 		if EthState <= constants.EthState1 {
 			helpers.Send(b, u, templates.FollowSequence)
 			return
@@ -192,13 +196,6 @@ func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mod
 }
 
 func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.Nodes) {
-	TMState := helpers.GetState(b, u, constants.TMState, db)
-	color.Green("******* STATE HANDLE BW = %d *******", TMState)
-	if TMState <= constants.TMState0 {
-		helpers.Send(b, u, templates.FollowSequence)
-		return
-	}
-
 	network, err := db.Read(constants.BlockchainNetwork, u.Message.From.UserName)
 	if err != nil {
 		helpers.Send(b, u, templates.BWAttachmentError)
@@ -206,19 +203,19 @@ func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.
 
 	if network.Value == constants.TenderMintNetwork {
 		state := helpers.GetState(b, u, constants.TMState, db)
-		color.Green("******* STATE HANDLE BW = %d *******", state)
+		//color.Green("******* STATE HANDLE BW = %d *******", state)
 
-		if state <= constants.TMState0 {
+		if state < constants.TMState2 {
 			helpers.Send(b, u, templates.FollowSequence)
 			return
 		}
 		tendermint.HandleBWTM(b, u, db, nodes.TMNodes)
-		helpers.SetState(b, u, constants.TMState, constants.TMState2, db)
+		helpers.SetState(b, u, constants.TMState, constants.TMState3, db)
 	}
 
 	if network.Value == constants.EthNetwork {
 		EthState := helpers.GetState(b, u, constants.EthState, db)
-		color.Green("******* STATE HANDLE BW = %d *******", EthState)
+		//color.Green("******* STATE HANDLE BW = %d *******", EthState)
 		if EthState <= constants.EthState0 {
 			helpers.Send(b, u, templates.FollowSequence)
 			return

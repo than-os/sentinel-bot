@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/fatih/color"
 	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo/ldb"
 	"github.com/than-os/sentinel-bot/dbo/models"
@@ -33,8 +32,8 @@ func AskForTendermintWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB,
 		return
 	}
 
+	helpers.SetState(b, u, constants.TMState, constants.TMState1, db)
 	helpers.Send(b, u, templates.AskForTMWallet)
-	helpers.SetState(b, u, constants.TMState, constants.TMState0, db)
 }
 
 func IsValidTMAccount(u tgbotapi.Update) string {
@@ -58,24 +57,27 @@ func IsTMTxnHash(u tgbotapi.Update) string {
 	return ""
 }
 
-func getTMTxn(hash string) models.TMTxn {
+func getTMTxn(hash string) (models.TMTxn, bool) {
 	var txnResp models.TMTxn
 	url := fmt.Sprintf(constants.TMTxnURL, hash)
 	resp, err := http.Get(url)
 	if err != nil {
-		return txnResp
+		return txnResp, false
 	}
 	if err = json.NewDecoder(resp.Body).Decode(&txnResp); err != nil {
-		return txnResp
+		return txnResp, false
 	}
-	return txnResp
+
+
+
+	return txnResp, true
 }
 
 func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []models.TONNode) {
 	state := helpers.GetState(b, u, constants.TMState, db)
-	color.Green("******* STATE BW = %d *******", state)
+	//color.Green("******* STATE BW = %d *******", state)
 
-	if state <= constants.TMState2 {
+	if state < constants.TMState4 {
 		helpers.Send(b, u, templates.FollowSequence)
 		return
 	}
@@ -95,7 +97,7 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 	}
 
 	i := strToInt - 1
-	if IsValidTMTxn(u, db) {
+	if IsValidTMTxn(b, u, db) {
 		url := fmt.Sprintf(constants.ProxyURL, nodes[i].IPAddr, strconv.Itoa(nodes[i].Port), nodes[i].Username, nodes[i].Password)
 
 		values := []models.KV{
@@ -148,18 +150,23 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 			InlineKeyboardOpts: btnOpts,
 		}
 		helpers.Send(b, u, templates.Success, opts)
-		helpers.SetState(b, u, constants.TMState, constants.TMState4, db)
+		helpers.SetState(b, u, constants.TMState, constants.TMState5, db)
 		return
 	}
 
 	helpers.Send(b, u, "invalid txn hash. please try again")
 }
 
-func IsValidTMTxn(u tgbotapi.Update, db ldb.BotDB) bool {
+func IsValidTMTxn(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) bool {
 
 	username := u.Message.From.UserName
 	hash := u.Message.Text
-	txn := getTMTxn(hash)
+	txn, ok := getTMTxn(hash)
+
+	if !ok {
+		helpers.Send(b, u, templates.TXNNotFound)
+		return false
+	}
 
 	userWallet, err := db.Read(constants.WalletTM, username)
 
@@ -192,17 +199,17 @@ func IsValidTMTxn(u tgbotapi.Update, db ldb.BotDB) bool {
 
 func HandleWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 	TMState := helpers.GetState(b, u, constants.TMState, db)
-	color.Green("******* STATE HANDLE WALLET = %d *******", TMState)
-	if TMState != constants.TMState0 {
+	//color.Green("******* STATE HANDLE WALLET = %d *******", TMState)
+	if TMState < constants.TMState1 {
 		helpers.Send(b, u, templates.FollowSequence)
 		return
 	}
-	helpers.SetState(b, u, constants.TMState, constants.TMState1, db)
+	helpers.SetState(b, u, constants.TMState, constants.TMState2, db)
 
-	bal, ok := validations.IsWalletHaveBalance(u.Message.Text)
-	if ok {
+	bal, ok := validations.CheckTMBalance(u.Message.Text)
+	if !ok {
 		msg := fmt.Sprintf(templates.NoMinBal, bal)
-		helpers.Send(b,u, msg)
+		helpers.Send(b, u, msg)
 		return
 	}
 
