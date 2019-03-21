@@ -27,4 +27,8 @@ Ethereum Wallet Attached: <b>%s</b>`
 	InvalidOption     = "invalid option"
 	FollowSequence    = "please try to follow the flow for the bot to work efficiently for you"
 	NoNetworkSelected = "you have not selected a blockchain network to part of. Please select a network"
+	NoMinBal          = `you don't have enough balance to use this bot.
+BALANCE: %.3f $SUT
+Minimum required balance is 10 $SUT. Please get some $SUTs and resubmit your Tendermint Wallet.
+If you do not know how to get Sentinel Utilty Tokens, please ask the team @sentinel_co'`
 )
