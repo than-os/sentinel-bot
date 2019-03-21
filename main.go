@@ -40,6 +40,10 @@ func main() {
 			continue
 		}
 
+		if update.Message.From.IsBot {
+			return
+		}
+
 		handlers.MainHandler(bot, update, db, *nodes)
 		if update.Message.IsCommand() {
 			switch update.Message.Command() {
