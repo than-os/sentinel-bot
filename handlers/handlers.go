@@ -23,12 +23,9 @@ import (
 func Greet(b *tgbotapi.BotAPI, u tgbotapi.Update) {
 	greet := fmt.Sprintf(templates.GreetingMsg, u.Message.From.UserName)
 
-	btnOpts := []models.InlineButtonOptions{
-		{Label: constants.EthNetwork, URL: "https://google.com"},
-		{Label: constants.TenderMintNetwork, URL: "https://google.com"},
-	}
+	btnOpts := []string{constants.EthNetwork, constants.TenderMintNetwork,}
 	opts := models.ButtonHelper{
-		Type: constants.InlineButton, InlineKeyboardOpts: btnOpts,
+		Type: constants.ReplyButton, Labels: btnOpts,
 	}
 	helpers.Send(b, u, greet, opts)
 }
@@ -196,7 +193,7 @@ func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mod
 
 func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.Nodes) {
 	TMState := helpers.GetState(b, u, constants.TMState, db)
-	color.Green("******* STATE NODE ID = %d *******", TMState)
+	color.Green("******* STATE HANDLE BW = %d *******", TMState)
 	if TMState <= constants.TMState0 {
 		helpers.Send(b, u, templates.FollowSequence)
 		return
@@ -209,7 +206,7 @@ func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.
 
 	if network.Value == constants.TenderMintNetwork {
 		state := helpers.GetState(b, u, constants.TMState, db)
-		color.Green("******* STATE BW = %d *******", state)
+		color.Green("******* STATE HANDLE BW = %d *******", state)
 
 		if state <= constants.TMState0 {
 			helpers.Send(b, u, templates.FollowSequence)
@@ -221,7 +218,7 @@ func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.
 
 	if network.Value == constants.EthNetwork {
 		EthState := helpers.GetState(b, u, constants.EthState, db)
-		color.Green("******* STATE NODE ID = %d *******", EthState)
+		color.Green("******* STATE HANDLE BW = %d *******", EthState)
 		if EthState <= constants.EthState0 {
 			helpers.Send(b, u, templates.FollowSequence)
 			return

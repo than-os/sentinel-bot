@@ -3,6 +3,7 @@ package helpers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/than-os/sentinel-bot/buttons"
 	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo/ldb"
@@ -33,7 +34,8 @@ func Send(b *tgbotapi.BotAPI, u tgbotapi.Update, msg string, opts ...models.Butt
 		}
 	}
 
-	_, _ = b.Send(c)
+	_, e := b.Send(c)
+	color.Red("***** \n ERROR: %v \n*****", e)
 }
 
 func SubscriptionPeriod(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, t time.Duration, network, price, period string) {

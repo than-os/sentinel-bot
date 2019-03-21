@@ -1,15 +1,13 @@
 package main
 
 import (
-	"log"
-	"os"
-	"runtime/trace"
-
 	"github.com/fatih/color"
 	"github.com/joho/godotenv"
 	"github.com/than-os/sentinel-bot/dbo"
 	"github.com/than-os/sentinel-bot/handlers"
 	"gopkg.in/telegram-bot-api.v4"
+	"log"
+	"os"
 )
 
 func init() {
@@ -19,8 +17,6 @@ func init() {
 }
 
 func main() {
-	trace.Start(os.Stdout)
-	defer trace.Stop()
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("BOT_API_KEY"))
 	if err != nil {
 		log.Fatalf("error in instantiating the bot: %v", err)
@@ -31,7 +27,6 @@ func main() {
 	updates, err := bot.GetUpdatesChan(u)
 	if err != nil {
 		color.Red("error while receiving messages: %s", err)
-		return
 	}
 	color.Green("started %s successfully", bot.Self.UserName)
 

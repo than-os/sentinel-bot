@@ -59,7 +59,8 @@ func StrongPassword(n int) string {
 	return string(b)
 }
 
-func AddUser(ipAddr, userName, passwordForNetwork string, db ldb.BotDB) error {
+func AddUser(ipAddr, userName, passwordForNetwork string,
+	db ldb.BotDB) error {
 	var res models.UserResp
 
 	err := DeleteUser(userName, ipAddr)
@@ -83,9 +84,10 @@ func AddUser(ipAddr, userName, passwordForNetwork string, db ldb.BotDB) error {
 	if err != nil {
 		return err
 	}
+
 	err = json.NewDecoder(resp.Body).Decode(&res)
 
-	color.Green("Add User: %s", res)
+	color.Green("Add User: %s %d %s\n", res, resp.StatusCode, b)
 	return err
 }
 

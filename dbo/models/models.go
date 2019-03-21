@@ -127,7 +127,9 @@ type ExpiredUsers struct {
 }
 
 type UserResp struct {
-	Message string `json:"messages"`
+	Message  string `json:"messages"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type InlineButtonOptions struct {

@@ -59,7 +59,7 @@ const (
 )
 
 const (
-	EthState0 = iota
+	EthState0 = iota + 1
 	EthState1
 	EthState2
 	EthState3
@@ -67,7 +67,7 @@ const (
 )
 
 const (
-	TMState0 = iota
+	TMState0 = iota + 1
 	TMState1
 	TMState2
 	TMState3
