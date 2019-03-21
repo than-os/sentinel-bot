@@ -17,7 +17,6 @@ func init() {
 }
 
 func main() {
-
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("BOT_API_KEY"))
 	if err != nil {
 		log.Fatalf("error in instantiating the bot: %v", err)
@@ -28,9 +27,8 @@ func main() {
 	updates, err := bot.GetUpdatesChan(u)
 	if err != nil {
 		color.Red("error while receiving messages: %s", err)
-		return
 	}
-	color.Green("%s", "started the bot successfully")
+	color.Green("started %s successfully", bot.Self.UserName)
 
 	db, nodes, err := dbo.NewDB()
 	if err != nil {
@@ -43,7 +41,6 @@ func main() {
 		}
 
 		handlers.MainHandler(bot, update, db, *nodes)
-
 		if update.Message.IsCommand() {
 			switch update.Message.Command() {
 			case "mynode":
@@ -62,11 +59,6 @@ func main() {
 				return
 			}
 		}
-		pair, err := db.GetTMState(update.Message.From.UserName)
-		if err != nil {
-			color.Red("******* ERROR = %s *******", err.Error())
-		}
-		color.Green("******* STATE = %d *******", pair)
 
 	}
 

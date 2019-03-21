@@ -23,7 +23,7 @@ import (
 func Greet(b *tgbotapi.BotAPI, u tgbotapi.Update) {
 	greet := fmt.Sprintf(templates.GreetingMsg, u.Message.From.UserName)
 
-	btnOpts := []string{constants.EthNetwork, constants.TenderMintNetwork}
+	btnOpts := []string{constants.EthNetwork, constants.TenderMintNetwork,}
 	opts := models.ButtonHelper{
 		Type: constants.ReplyButton, Labels: btnOpts,
 	}
@@ -170,7 +170,7 @@ func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mod
 		TMState := helpers.GetState(b, u, constants.TMState, db)
 		color.Green("******* STATE NODE ID = %d *******", TMState)
 		if TMState <= constants.TMState1 {
-			helpers.Send(b,u, templates.FollowSequence)
+			helpers.Send(b, u, templates.FollowSequence)
 			return
 		}
 		tendermint.HandleTMNodeID(b, u, db, nodes.TMNodes)
@@ -181,7 +181,7 @@ func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mod
 		EthState := helpers.GetState(b, u, constants.EthState, db)
 		color.Green("******* STATE NODE ID = %d *******", EthState)
 		if EthState <= constants.EthState1 {
-			helpers.Send(b,u, templates.FollowSequence)
+			helpers.Send(b, u, templates.FollowSequence)
 			return
 		}
 		ethereum.HandleNodeID(b, u, db, nodes.EthNodes)
@@ -193,9 +193,9 @@ func HandleNodeId(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes mod
 
 func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.Nodes) {
 	TMState := helpers.GetState(b, u, constants.TMState, db)
-	color.Green("******* STATE NODE ID = %d *******", TMState)
+	color.Green("******* STATE HANDLE BW = %d *******", TMState)
 	if TMState <= constants.TMState0 {
-		helpers.Send(b,u, templates.FollowSequence)
+		helpers.Send(b, u, templates.FollowSequence)
 		return
 	}
 
@@ -206,10 +206,10 @@ func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.
 
 	if network.Value == constants.TenderMintNetwork {
 		state := helpers.GetState(b, u, constants.TMState, db)
-		color.Green("******* STATE BW = %d *******", state)
+		color.Green("******* STATE HANDLE BW = %d *******", state)
 
 		if state <= constants.TMState0 {
-			helpers.Send(b,u, templates.FollowSequence)
+			helpers.Send(b, u, templates.FollowSequence)
 			return
 		}
 		tendermint.HandleBWTM(b, u, db, nodes.TMNodes)
@@ -218,9 +218,9 @@ func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.
 
 	if network.Value == constants.EthNetwork {
 		EthState := helpers.GetState(b, u, constants.EthState, db)
-		color.Green("******* STATE NODE ID = %d *******", EthState)
+		color.Green("******* STATE HANDLE BW = %d *******", EthState)
 		if EthState <= constants.EthState0 {
-			helpers.Send(b,u, templates.FollowSequence)
+			helpers.Send(b, u, templates.FollowSequence)
 			return
 		}
 		ethereum.HandleEthBW(b, u, db, nodes.EthNodes)

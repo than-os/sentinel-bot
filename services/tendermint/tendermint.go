@@ -75,7 +75,7 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 	color.Green("******* STATE BW = %d *******", state)
 
 	if state <= constants.TMState2 {
-		helpers.Send(b,u, templates.FollowSequence)
+		helpers.Send(b, u, templates.FollowSequence)
 		return
 	}
 
@@ -110,7 +110,6 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 
 		helpers.Send(b, u, "Thanks for submitting the TX-HASH. We're validating it")
 		helpers.Send(b, u, "creating new user for "+u.Message.From.UserName+"...")
-
 		node := nodes[i]
 		err = proxy.AddUser(node.IPAddr, u.Message.From.UserName, constants.PasswordTM, db)
 		if err != nil {
@@ -140,16 +139,15 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 			helpers.Send(b, u, templates.Error)
 			return
 		}
-
 		btnOpts := []models.InlineButtonOptions{
-			{Label: nodes[i].Username, URL: url},
+			{Label: "Sentinel Proxy", URL: url},
 		}
 		opts := models.ButtonHelper{
 			Type:               constants.InlineButton,
 			InlineKeyboardOpts: btnOpts,
 		}
 		helpers.Send(b, u, templates.Success, opts)
-		go helpers.SetState(b, u, constants.TMState, constants.TMState4, db)
+		helpers.SetState(b, u, constants.TMState, constants.TMState4, db)
 		return
 	}
 
@@ -163,21 +161,18 @@ func IsValidTMTxn(u tgbotapi.Update, db ldb.BotDB) bool {
 	txn := getTMTxn(hash)
 
 	userWallet, err := db.Read(constants.WalletTM, username)
-	color.Green("what is it3: %s", "")
 
 	if err != nil {
 		return false
 	}
 
 	recipientWallet, err := db.Read(constants.NodeWalletTM, username)
-	color.Green("what is it3: %s", "")
 
 	if err != nil {
 		return false
 	}
 
 	amount, err := db.Read(constants.NodePriceTM, username)
-	color.Green("what is it2: %s", "")
 	if err != nil {
 		return false
 	}
@@ -186,8 +181,6 @@ func IsValidTMTxn(u tgbotapi.Update, db ldb.BotDB) bool {
 		okWallet := txn.Tx.Value.Msg[0].Value.From == userWallet.Value
 		okRecipient := txn.Tx.Value.Msg[0].Value.To == recipientWallet.Value
 		okAmount := parseTxnAmount(txn.Tx.Value.Msg[0].Value.Coins[0].Amount) == amount.Value
-
-		color.Green("what is it1 ? %s %s %s ", okAmount, okWallet, okRecipient)
 
 		if okWallet && okRecipient && okAmount {
 			return true
@@ -199,8 +192,8 @@ func IsValidTMTxn(u tgbotapi.Update, db ldb.BotDB) bool {
 func HandleWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 	TMState := helpers.GetState(b, u, constants.TMState, db)
 	color.Green("******* STATE HANDLE WALLET = %d *******", TMState)
-	if TMState == constants.TMState0 {
-		helpers.Send(b,u, templates.FollowSequence)
+	if TMState != constants.TMState0 {
+		helpers.Send(b, u, templates.FollowSequence)
 		return
 	}
 	helpers.SetState(b, u, constants.TMState, constants.TMState1, db)

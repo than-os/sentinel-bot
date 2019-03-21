@@ -3,6 +3,7 @@ package helpers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/than-os/sentinel-bot/buttons"
 	"github.com/than-os/sentinel-bot/constants"
 	"github.com/than-os/sentinel-bot/dbo/ldb"
@@ -19,21 +20,22 @@ func Send(b *tgbotapi.BotAPI, u tgbotapi.Update, msg string, opts ...models.Butt
 	c := tgbotapi.NewMessage(u.Message.Chat.ID, msg)
 
 	for _, o := range opts {
-		if o.Type == "replyButton" {
+		if o.Type == constants.ReplyButton {
 			c.ReplyMarkup = tgbotapi.ReplyKeyboardMarkup{
 				Keyboard:        buttons.ReplyButtons(o.Labels),
 				OneTimeKeyboard: true,
 				ResizeKeyboard:  true,
 			}
 		}
-		if o.Type == "inlineButton" {
+		if o.Type == constants.InlineButton {
 			c.ReplyMarkup = tgbotapi.InlineKeyboardMarkup{
 				InlineKeyboard: buttons.InlineButtons(o.InlineKeyboardOpts),
 			}
 		}
 	}
 
-	_, _ = b.Send(c)
+	_, e := b.Send(c)
+	color.Red("***** \n ERROR: %v \n*****", e)
 }
 
 func SubscriptionPeriod(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, t time.Duration, network, price, period string) {
