@@ -52,10 +52,12 @@ const (
 	NodeBaseUrl         = "http://%s:30002/user"
 	PasswordLength      = 12
 	SentinelTONURL      = "https://ton.sentinelgroup.io/all"
+	TMBalanceURL        = "http://localhost:1317/accounts/%s"
 	NodeType            = "tendermint"
 	EthState            = "ETHSTATE"
 	TMState             = "TMSTATE"
 	NoState             = -1
+	MinBal              = 10000000
 )
 
 const (

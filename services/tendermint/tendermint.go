@@ -10,6 +10,7 @@ import (
 	"github.com/than-os/sentinel-bot/dbo/models"
 	"github.com/than-os/sentinel-bot/helpers"
 	"github.com/than-os/sentinel-bot/services/proxy"
+	"github.com/than-os/sentinel-bot/services/tendermint/validations"
 	"github.com/than-os/sentinel-bot/templates"
 	"gopkg.in/telegram-bot-api.v4"
 	"math"
@@ -197,6 +198,14 @@ func HandleWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 		return
 	}
 	helpers.SetState(b, u, constants.TMState, constants.TMState1, db)
+
+	bal, ok := validations.IsWalletHaveBalance(u.Message.Text)
+	if ok {
+		msg := fmt.Sprintf(templates.NoMinBal, bal)
+		helpers.Send(b,u, msg)
+		return
+	}
+
 	if IsValidTMAccount(u) != "" {
 		err := db.Insert(constants.WalletTM, u.Message.From.UserName, u.Message.Text)
 		if err != nil {
@@ -221,7 +230,7 @@ func HandleBWTM(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes []mod
 	resp, err := db.Read(constants.BandwidthTM, u.Message.From.UserName)
 
 	if err != nil {
-		err := db.Insert(constants.BandwidthTM, u.Message.From.UserName, u.Message.Text[:2])
+		err = db.Insert(constants.BandwidthTM, u.Message.From.UserName, u.Message.Text[:2])
 		if err != nil {
 			helpers.Send(b, u, templates.Error)
 			return

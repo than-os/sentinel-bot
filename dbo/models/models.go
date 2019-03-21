@@ -80,9 +80,10 @@ type TMTxn struct {
 type TMMsg struct {
 	Type  string `json:"type"`
 	Value struct {
-		Coins []TMAmount `json:"Coins"`
-		From  string     `json:"From"`
-		To    string     `json:"To"`
+		Coins   []TMAmount `json:"Coins"`
+		From    string     `json:"From"`
+		To      string     `json:"To"`
+		Address string     `json:"address"`
 	} `json:"value"`
 }
 
