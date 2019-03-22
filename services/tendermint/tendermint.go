@@ -220,6 +220,13 @@ func HandleWallet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 			return
 		}
 
+		unique := validations.IsUniqueWallet(u.Message.Text, u.Message.From.UserName, db)
+
+		if !unique {
+			helpers.Send(b, u, templates.NotUniqueWallet)
+			return
+		}
+
 		btnOpts := []string{constants.TenD, constants.OneM, constants.ThreeM}
 		opts := models.ButtonHelper{
 			Type:   constants.ReplyButton,
