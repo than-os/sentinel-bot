@@ -9,6 +9,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func CheckTMBalance(address string) (float64, bool) {
@@ -37,6 +38,32 @@ func IsUniqueWallet(wallet, username string, db ldb.BotDB) bool {
 			return false
 		}
 		return true
+	}
+	return false
+}
+
+func CheckTXNTimeStamp(hash, wallet, timeLimit string) bool {
+	var body models.Transactions
+	url := fmt.Sprintf(constants.GetTXNFromMN, wallet)
+	resp, err := http.Get(url)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	if err = json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		return false
+	}
+
+	for _, txn := range body.List {
+		txnTimestamp, err := time.Parse(time.RFC3339, txn.Timestamp)
+		if err != nil {
+			return false
+		}
+		l, _ := time.Parse(time.RFC3339, timeLimit)
+
+		if txn.Hash == hash && int(l.Sub(txnTimestamp).Minutes()) < constants.TimeLimit {
+			return true
+		}
 	}
 	return false
 }

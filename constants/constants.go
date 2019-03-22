@@ -20,6 +20,7 @@ const (
 	NodePriceTM         = "NODEPRICETM"
 	BlockchainNetwork   = "BLOCKCHAINNETWORK"
 	TMHashLength        = 40
+	TimeLimit           = 30
 	TMPrefix            = "cosmosaccaddr"
 	WalletTM            = "WALLETTM"
 	TMWalletLength      = 52
@@ -50,11 +51,13 @@ const (
 	ProxyURL            = "https://t.me/socks?server=%s&port=%s&user=%s&pass=%s"
 	IPLEAKURL           = "https://ipleak.net/json/"
 	NodeBaseUrl         = "http://%s:30002/user"
+	GetTXNFromMN        = "http://35.154.179.57:8000/txes?fromAccountAddress=%s"
 	PasswordLength      = 12
 	SentinelTONURL      = "https://ton.sentinelgroup.io/all"
 	TMBalanceURL        = "http://localhost:1317/accounts/%s"
 	NodeType            = "tendermint"
 	EthState            = "ETHSTATE"
+	TMTimeLimit         = "TMTimeLimit"
 	TMState             = "TMSTATE"
 	NoState             = -1
 	MinBal              = 10000000

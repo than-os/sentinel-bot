@@ -13,7 +13,10 @@ Please select a blockchain network for payments to this bot.`
 	UserInfo = `Bandwidth Duration Left: <b>%0.0f days</b>
 Ethereum Wallet Attached: <b>%s</b>`
 	AskForEthWallet   = "Please share your ethereum wallet address that you want to use for transactions to this bot"
-	AskForPayment     = "please send %s $SENTS to the following address and submit the transaction hash here: "
+	AskForPayment     = `please send %s $SENTS to the following address in next 30 minutes
+and submit the transaction hash here.
+Please note that if you submit the transaction hash after 30 minutes, it will be considered as invalid transaction.
+However, you can use /refund to claim  your amount`
 	AskForTMWallet    = "Please share your tendermint wallet address that you want to use for transactions to this bot"
 	AskForBW          = "Please select how much bandwidth you need by clicking on one of the buttons below: "
 	BWError           = "error while storing bandwidth price"
@@ -30,7 +33,7 @@ Ethereum Wallet Attached: <b>%s</b>`
 	NoMinBal          = `you don't have enough balance to use this bot.
 BALANCE: %.3f $SUT
 Minimum required balance is 10 $SUT. Please get some $SUTs and resubmit your Tendermint Wallet.
-If you do not know how to get Sentinel Utilty Tokens, please ask the team @sentinel_co'`
+If you do not know how to get Sentinel Utilty Tokens, please ask the team @sentinel_co`
 	AboutSentinel = `Sentinel is an interoperable secure network layer offering the Sentinel Service Chain 
 exclusively for distributed & decentralized native services like 
 - dVPN, Sentrix (dChat and dVoIP) and more. 

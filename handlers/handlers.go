@@ -22,6 +22,7 @@ import (
 func Greet(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
 	helpers.SetState(b, u, constants.EthState, constants.EthState0, db)
 	helpers.SetState(b, u, constants.TMState, constants.TMState0, db)
+	_ = db.Insert(constants.TMTimeLimit, u.Message.From.UserName, time.Now().Format(time.RFC3339))
 	greet := fmt.Sprintf(templates.GreetingMsg, u.Message.From.UserName)
 	btnOpts := []string{constants.EthNetwork, constants.TenderMintNetwork}
 	opts := models.ButtonHelper{
@@ -224,4 +225,8 @@ func HandleBW(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes models.
 		helpers.SetState(b, u, constants.EthState, constants.TMState2, db)
 	}
 
+}
+
+func ClaimRefund(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB) {
+	helpers.Send(b, u, "feature not available yet")
 }

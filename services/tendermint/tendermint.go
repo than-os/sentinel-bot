@@ -84,13 +84,11 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 
 	resp, err := db.Read(constants.NodeTM, u.Message.From.UserName)
 	if err != nil {
-		c := tgbotapi.NewMessage(u.Message.Chat.ID, "could not get user info")
-		_, _ = b.Send(c)
+		helpers.Send(b, u, templates.Error)
 		return
 	}
 
-	respToStr := fmt.Sprintf("%s", resp.Value)
-	strToInt, err := strconv.Atoi(respToStr)
+	strToInt, err := strconv.Atoi(resp.Value)
 	if err != nil {
 		helpers.Send(b, u, templates.Error)
 		return
@@ -112,6 +110,27 @@ func HandleTMTxnHash(b *tgbotapi.BotAPI, u tgbotapi.Update, db ldb.BotDB, nodes 
 		}
 
 		helpers.Send(b, u, "Thanks for submitting the TX-HASH. We're validating it")
+
+		pair, err := db.Read(constants.WalletTM, u.Message.From.UserName)
+		if err != nil {
+			helpers.Send(b, u, templates.Error)
+			return
+		}
+
+		tl, err := db.Read(constants.TMTimeLimit, u.Message.From.UserName)
+		if err != nil {
+			helpers.Send(b, u, templates.Error)
+			return
+		}
+
+		//timeLimit, _ := time.Parse(time.RFC3339, tl.Value)
+		checkInTime := validations.CheckTXNTimeStamp(u.Message.Text, pair.Value, tl.Value)
+
+		if !checkInTime {
+			helpers.Send(b, u, "time is up for submitting the transaction")
+			return
+		}
+
 		helpers.Send(b, u, "creating new user for "+u.Message.From.UserName+"...")
 		node := nodes[i]
 		err = proxy.AddUser(node.IPAddr, u.Message.From.UserName, constants.PasswordTM, db)
