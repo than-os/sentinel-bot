@@ -59,6 +59,8 @@ func main() {
 				handlers.ShowMyInfo(bot, update, db)
 			case "eth":
 				handlers.ShowEthWallet(bot, update, db)
+			case "refund":
+				handlers.ClaimRefund(bot, update, db)
 			case "about":
 				handlers.AboutSentinel(bot, update)
 			default:

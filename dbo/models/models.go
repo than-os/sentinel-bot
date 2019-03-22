@@ -143,3 +143,14 @@ type ButtonHelper struct {
 	Labels             []string
 	InlineKeyboardOpts []InlineButtonOptions
 }
+
+type Transactions struct {
+	List []MNTXs `json:"txes"`
+}
+
+type MNTXs struct {
+	From      string `json:"fromAccountAddress"`
+	To        string `json:"toAccountAddress"`
+	Hash      string `json:"txHash"`
+	Timestamp string `json:"addedOn"`
+}

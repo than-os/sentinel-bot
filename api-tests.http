@@ -6,5 +6,17 @@
 # * 'mptr' and 'fptr' create a POST request to submit a form with a text or file field (multipart/form-data);
 
 #http://localhost:1317/accounts/cosmosaccaddr184ptgzh6ayhvw56k5y0p9g9j3w8v03j0hr6fh5
-http://localhost:1317/txs/47F93F2693F22F72D63C944E5755B7C33934B3C2
+# endpoint to check balance of a wallet
+#http://localhost:1317/accounts/cosmosaccaddr1wytcgysjj60ema2n34hazwtc60d02sunzchscg
+###
+
+# endpoint to check a transaction for a give wallet
+
+#http://localhost:1317/txs/AF433DE9C25671647DD0A95DB955773DF3D7A61B
+
+###
+
+http://35.154.179.57:8000/txes?fromAccountAddress=cosmosaccaddr184ptgzh6ayhvw56k5y0p9g9j3w8v03j0hr6fh5&
+
+
 ###
