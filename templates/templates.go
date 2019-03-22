@@ -39,4 +39,5 @@ Github: https://github.com/sentinel-official/sentinel
 Twitter: http://twitter.com/Sentinel_co`
 	TXNNotFound = `could not find the transaction hash in the network. A possible reason could be that you did the
 transaction on a different Network as of the bot.`
+	NotUniqueWallet = "this wallet has already been attached to another user. Please try with a different wallet address"
 )

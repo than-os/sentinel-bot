@@ -24,8 +24,10 @@ type BotDB interface {
 	RemoveETHUser(string) error
 	// RemoveUser Would delete all of the user info
 	RemoveTMUser(string) error
+	// Perform a partial search for a bunch of key value pairs
+	PartialSearch(string) []models.KV
 	// Iterate over the entire database and find all the users
-	Iterate() []models.User
+	Iterate() ([]models.User, error)
 	// IterateExpired would return a slice of expired users
 	IterateExpired() ([]models.ExpiredUsers, error)
 	// MultiRead would return a slice of your key value

@@ -154,20 +154,38 @@ func (l Level) IterateExpired() ([]models.ExpiredUsers, error) {
 	return usersWithTimestamp, err
 }
 
-func (l Level) Iterate() []models.User {
+func (l Level) PartialSearch(key string) []models.KV {
+	var values []models.KV
+
+	itr := l.db.NewIterator(util.BytesPrefix([]byte(key)), nil)
+
+	for itr.Next() {
+		values = append(values, models.KV{
+			Value: fmt.Sprintf("%s", itr.Value()),
+			Key: fmt.Sprintf("%s", itr.Key()),
+		})
+	}
+
+	itr.Release()
+
+	return values
+}
+
+func (l Level) Iterate() ([]models.User, error) {
 	itr := l.db.NewIterator(nil, nil)
 
 	var p []models.User
 	var w []models.KV
 	for itr.Next() {
-		w = append(w, models.KV{Key: fmt.Sprintf("%s", itr.Key()), Value: fmt.Sprintf("%s", itr.Value())})
-
+		key := fmt.Sprintf("%s", itr.Key())
+		value := fmt.Sprintf("%s", itr.Value())
+		w = append(w, models.KV{Key: key, Value: value})
 	}
 	defer itr.Release()
 	err := itr.Error()
 
 	if err != nil {
-		return []models.User{}
+		return []models.User{}, err
 	}
 
 	for _, user := range w {
@@ -181,7 +199,7 @@ func (l Level) Iterate() []models.User {
 				} else if u.Key == constants.Timestamp+username {
 					t, err := time.Parse(time.RFC3339, u.Value)
 					if err != nil {
-						return []models.User{}
+						return []models.User{}, err
 					}
 					participant.Timestamp = t
 				} else if u.Key == constants.Node+username {
@@ -194,7 +212,7 @@ func (l Level) Iterate() []models.User {
 		}
 	}
 
-	return p
+	return p, err
 }
 
 func (l Level) RemoveETHUser(username string) error {
