@@ -14,8 +14,6 @@ type BotDB interface {
 	SetTMState(string, int8) error
 	// Insert is used to store a new key-value pair
 	Insert(string, string, string) error
-	// Update is used to update an existing key-value pair
-	Update(string, string, string) error
 	// Delete would remove one key-pair from the database
 	Delete(string, string) error
 	// Read would return a key-value pair for a query
