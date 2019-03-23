@@ -89,11 +89,6 @@ func (l Level) Insert(key, username, value string) error {
 	return l.db.Put(k, v, nil)
 }
 
-func (l Level) Update(key, username, value string) error {
-
-	return nil
-}
-
 func (l Level) Delete(key, username string) error {
 
 	return nil

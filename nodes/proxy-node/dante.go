@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/color"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/fatih/color"
 )
 
 type RegisterRequest struct {
@@ -65,10 +64,18 @@ const (
 )
 
 func main() {
+	// sleep is for the node to first register with the Sentinel Master Node (OpenVPN/SOCKS5)
 	time.Sleep(time.Minute)
+	// Command Line Arguments are required for opting between Ethereum or Tendermint Networks
+	// os.Args returns a slice of cmd line arguments, 0th value is the main function itself
+	if len(os.Args) == 1 {
+		color.Red("%s", "Please opt for a network, tendermint or ethereum")
+		os.Exit(1)
+	}
 	Register(os.Args[1:2][0])
 
 	http.HandleFunc("/live", status)
+	color.Green("%s", "started the dante utility")
 	log.Fatal(http.ListenAndServe(":3030", nil))
 
 }
@@ -104,10 +111,12 @@ func ReadConfig() (wallet string) {
 	if err != nil {
 		log.Println(err)
 		return
+
 	}
 
 	f, e := os.Create(EthConfig)
 	if e != nil {
+
 		log.Fatal(e)
 	}
 

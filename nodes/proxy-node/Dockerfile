@@ -1,20 +1,25 @@
 FROM golang:alpine AS build-env
 WORKDIR /root/sentinel
-COPY dante.go /root/sentinel/
-RUN apk update \
-    && apk add ca-certificates git \
-    && go get github.com/fatih/color github.com/jasonlvhit/gocron \
-    && cd /root/sentinel \
-    && go build -o dante dante.go
 
+# build for proxy node
+COPY dante.go /root/sentinel/proxy
+RUN apk update
+#RUN apk add ca-certificates git
+#&& go get github.com/fatih/color github.com/jasonlvhit/gocron && cd /root/sentinel/proxy && go build -o dante dante.go
+
+# build for master node
+
+COPY ../master-node /root/sentinel/master/
+RUN go build -o alpine-dante main.go
 
 FROM sentinelofficial/stt1-dvpn-openvpn
 
-COPY alpine-dante dante /usr/bin/
+#COPY alpine-dante dante /usr/bin/
 
 COPY app.py /root/app.py
 COPY run.sh /root/run.sh
-COPY --from=build-env /root/sentinel/dante /root/sentinel/dante
+COPY --from=build-env /root/sentinel/proxy/dante /usr/local/bin/dante
+COPY --from=build-env /root/sentinel/master/alpine-dante /usr/local/bin/alpine-dante
 
 ENV PASS "defaultPasswordFortheNode"
 
@@ -41,5 +46,8 @@ RUN set -x \
      && rm -rf /tmp/*
     #  && apk del --purge .
 
-EXPOSE 1080 3030
+# 1080 for sockd
+# 3030 alpine-dante
+# 30002 for dante
+EXPOSE 1080 3030 30002
 
